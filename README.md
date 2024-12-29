@@ -1,5 +1,5 @@
 # FuelMixer
-FuelMixer is a plugin for Kerbal Space Program which provides a simple framework for maintaining consistent propellant mixtures across fuel tanks, engines and RCS thrusters.
+FuelMixer is a plugin for Kerbal Space Program which provides a simple framework for maintaining consistent propellant mixtures across fuel tanks, engines and RCS thrusters. This plugin was developed specifically for the mod [Chemical Propulsion](https://github.com/CharleRoger/ChemicalPropulsion), but is designed in a generic way and may find uses elsewhere.
 
 This is an experimental plugin still very much in development, use at your own risk!
 
@@ -12,6 +12,7 @@ This is an experimental plugin still very much in development, use at your own r
 ### Planned
 - Jet engines
 - Tripropellant+ fuel tanks, engines and RCS thrusters
+- Relevant stats displayed in the PAW
 
 ## Usage
 ### FuelMixerPropellantConfig
