@@ -5,7 +5,7 @@ namespace FuelMixer
 {
     public class PropellantCombinationConfig : PropellantConfigBase
     {
-        public float TotalPropellantRatio
+        private float TotalPropellantRatio
         {
             get
             {

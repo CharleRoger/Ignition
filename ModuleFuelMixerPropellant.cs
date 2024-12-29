@@ -226,8 +226,8 @@ namespace FuelMixer
                 var propellantConfig = new PropellantConfig(propellantConfigNode);
                 if (propellantNames.Contains(propellantConfig.ResourceName))
                 {
-                    if (propellantConfig.PropellantType == "fuel") fuelConfig = propellantConfig;
-                    else if (propellantConfig.PropellantType == "oxidizer") oxidizerConfig = propellantConfig;
+                    if (!propellantConfig.IsOxidizer) fuelConfig = propellantConfig;
+                    else oxidizerConfig = propellantConfig;
                     if (!(fuelConfig is null) && !(oxidizerConfig is null)) break;
                 }
             }
