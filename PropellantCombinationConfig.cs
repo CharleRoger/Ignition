@@ -10,7 +10,13 @@ namespace FuelMixer
             get
             {
                 var totalRatio = 0f;
-                foreach (var propellant in Propellants) totalRatio += propellant.ratio;
+                foreach (var propellant in Propellants)
+                {
+                    if (propellant.ignoreForIsp) continue;
+
+                    totalRatio += propellant.ratio;
+                }
+
                 return totalRatio;
             }
         }
@@ -25,6 +31,8 @@ namespace FuelMixer
                     _thrustMultiplier = 1;
                     foreach (var propellant in Propellants)
                     {
+                        if (propellant.ignoreForIsp) continue;
+
                         _thrustMultiplier *= Mathf.Pow(PropellantConfigs[propellant.name].ThrustMultiplier, propellant.ratio / TotalPropellantRatio);
                     }
                 }
@@ -47,6 +55,8 @@ namespace FuelMixer
                     _ispMultiplier = 1;
                     foreach (var propellant in Propellants)
                     {
+                        if (propellant.ignoreForIsp) continue;
+
                         _ispMultiplier *= Mathf.Pow(PropellantConfigs[propellant.name].IspMultiplier, propellant.ratio / TotalPropellantRatio);
                     }
                 }
@@ -66,16 +76,19 @@ namespace FuelMixer
             {
                 if (_propellantConfigs == null)
                 {
-                    _propellantConfigs = new Dictionary<string, PropellantConfig>();
-
-                    var propellantNames = new List<string>();
-                    foreach (var propellant in Propellants) propellantNames.Add(propellant.name);
-
-                    ConfigNode[] propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("FuelMixerPropellantConfig");
-                    foreach (var propellantConfigNode in propellantConfigNodes)
+                    var allPropellantConfigNodes = GameDatabase.Instance.GetConfigNodes("FuelMixerPropellantConfig");
+                    var allPropellantConfigs = new Dictionary<string, PropellantConfig>();
+                    foreach (var propellantConfigNode in allPropellantConfigNodes)
                     {
                         var propellantConfig = new PropellantConfig(propellantConfigNode);
-                        if (propellantNames.Contains(propellantConfig.ResourceName)) _propellantConfigs[propellantConfig.ResourceName] = propellantConfig;
+                        allPropellantConfigs[propellantConfig.ResourceName] = propellantConfig;
+                    }
+
+                    _propellantConfigs = new Dictionary<string, PropellantConfig>();
+                    foreach (var propellant in Propellants)
+                    {
+                        if (allPropellantConfigs.ContainsKey(propellant.name)) _propellantConfigs[propellant.name] = allPropellantConfigs[propellant.name];
+                        else _propellantConfigs[propellant.name] = new PropellantConfig(propellant.name);
                     }
                 }
 
@@ -111,6 +124,11 @@ namespace FuelMixer
             var fuel = fuelConfig.GetPropellant(80 * fuelFractionRounded, true);
             var oxidizer = oxidizerConfig.GetPropellant(Mathf.RoundToInt(80 * (1 - fuelFractionRounded)));
             Propellants = new List<Propellant> { fuel, oxidizer };
+        }
+
+        public PropellantCombinationConfig(List<Propellant> propellants)
+        {
+            Propellants = propellants;
         }
     }
 }

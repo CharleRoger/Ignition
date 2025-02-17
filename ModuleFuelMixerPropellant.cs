@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static FuelMixer.PropellantCombinationConfig;
 
 namespace FuelMixer
 {
@@ -18,6 +19,21 @@ namespace FuelMixer
         [KSPField(isPersistant = true)]
         public string resourceNameOriginal = null;
 
+        string GetResourceName(bool useOriginal)
+        {
+            if (useOriginal) return resourceNameOriginal;
+            return resourceName;
+        }
+
+        [KSPField(isPersistant = true)]
+        public float ratio = 0;
+
+        [KSPField(isPersistant = true)]
+        public bool drawStackGauge = false;
+
+        [KSPField(isPersistant = true)]
+        public bool ignoreForIsp = false;
+
         private PropellantConfigBase _originalPropellantConfig = null;
         private PropellantConfigBase OriginalPropellantConfig
         {
@@ -25,12 +41,7 @@ namespace FuelMixer
             {
                 if (_originalPropellantConfig is null)
                 {
-                    var propellantNames = new HashSet<string>();
-                    foreach (var propellantModule in GetConnectedPropellantModules())
-                    {
-                        propellantNames.Add(propellantModule.resourceNameOriginal);
-                    }
-                    _originalPropellantConfig = GetPropellantConfig(propellantNames);
+                    _originalPropellantConfig = GetPropellantConfig(true);
                 }
                 return _originalPropellantConfig;
             }
@@ -43,12 +54,7 @@ namespace FuelMixer
             {
                 if (_currentPropellantConfig is null)
                 {
-                    var propellantNames = new HashSet<string>();
-                    foreach (var propellantModule in GetConnectedPropellantModules())
-                    {
-                        propellantNames.Add(propellantModule.resourceName);
-                    }
-                    _currentPropellantConfig = GetPropellantConfig(propellantNames);
+                    _currentPropellantConfig = GetPropellantConfig(false);
                 }
                 return _currentPropellantConfig;
             }
@@ -135,13 +141,16 @@ namespace FuelMixer
             ApplyPropellantCombinationToResources();
 
             var engineModule = GetEngineModule();
-            if (!(engineModule is null) && !engineModule.useVelCurve)
+            if (!(engineModule is null))
             {
                 if (EngineMaxThrustOriginal == 0)
                 {
                     EngineMaxThrustOriginal = engineModule.maxThrust;
                     EngineIspVacuumOriginal = engineModule.atmosphereCurve.Curve.keys[0].value;
-                    EngineIspSeaLevelOriginal = engineModule.atmosphereCurve.Curve.keys[1].value;
+                    if (!engineModule.useVelCurve)
+                    {
+                        EngineIspSeaLevelOriginal = engineModule.atmosphereCurve.Curve.keys[1].value;
+                    }
                 }
 
                 ApplyPropellantCombinationToEngineModule();
@@ -188,23 +197,65 @@ namespace FuelMixer
             return null;
         }
 
-        private PropellantConfigBase GetPropellantConfig(HashSet<string> propellantNames)
+        private Propellant GetPropellant(string resourceName, float ratio, bool drawStackGauge = false, bool ignoreForIsp = false)
         {
-            ConfigNode[] propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("FuelMixerPropellantConfig");
+            var node = new ConfigNode();
+            node.name = "PROPELLANT";
+            node.AddValue("name", resourceName);
+            node.AddValue("ratio", ratio);
+            node.AddValue("drawStackGauge", drawStackGauge);
+            node.AddValue("ignoreForIsp", ignoreForIsp);
+            var propellant = new Propellant();
+            propellant.Load(node);
+            propellant.displayName = resourceName;
+            return propellant;
+        }
 
-            // If there is only one propellant, return a simple config
-            if (propellantNames.Count == 1)
+        private PropellantConfigBase GetPropellantConfig(bool useOriginalResourceNames)
+        {
+            var propellantModules = GetConnectedPropellantModules(true);
+            
+            var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("FuelMixerPropellantConfig");
+            var propellantConfigs = new Dictionary<string, PropellantConfig>();
+            foreach (var propellantConfigNode in propellantConfigNodes)
             {
-                foreach (var propellantConfigNode in propellantConfigNodes)
-                {
-                    var propellantConfig = new PropellantConfig(propellantConfigNode);
-                    if (propellantConfig.ResourceName == propellantNames.First()) return propellantConfig;
-                }
-                return null;
-            }            
+                var propellantConfig = new PropellantConfig(propellantConfigNode);
+                propellantConfigs[propellantConfig.ResourceName] = propellantConfig;
+            }
+            foreach (var propellantModule in propellantModules)
+            {
+                // Dummy config for undefined propellants
+                var propellantName = propellantModule.GetResourceName(useOriginalResourceNames);
+                if (!propellantConfigs.ContainsKey(propellantName)) propellantConfigs[propellantName] = new PropellantConfig(propellantName);
+            }
 
-            // If there are multiple propellants, try to find a pre-configured propellant combination
+            // If propellants have specified ratios, construct the combination
+            bool ratiosSpecified = true;
+            foreach (var propellantModule in propellantModules)
+            {
+                if (propellantModule.ratio == 0)
+                {
+                    ratiosSpecified = false;
+                    break;
+                }
+            }
+            if (ratiosSpecified)
+            {
+                var propellants = new List<Propellant>();
+                foreach (var propellantModule in propellantModules)
+                {
+                    var propellant = GetPropellant(propellantModule.GetResourceName(useOriginalResourceNames), propellantModule.ratio, propellantModule.drawStackGauge, propellantModule.ignoreForIsp);
+                    propellants.Add(propellant);
+                }
+                return new PropellantCombinationConfig(propellants);
+            }
+
+            // Need to account for ratio, drawStackGauge and ignoreForIsp here
+
+            // If propellants have unspecified ratios, try to find a pre-configured propellant combination
             ConfigNode[] propellantCombinationConfigNodes = GameDatabase.Instance.GetConfigNodes("FuelMixerPropellantCombinationConfig");
+            var propellantNames = new List<string>();
+            foreach (var propellantModule in propellantModules) propellantNames.Add(propellantModule.GetResourceName(useOriginalResourceNames));
             foreach (var propellantCombinationConfigNode in propellantCombinationConfigNodes)
             {
                 var propellantCombinationConfig = new PropellantCombinationConfig(propellantCombinationConfigNode);
@@ -216,19 +267,38 @@ namespace FuelMixer
                 if (configPropellantNames.SetEquals(propellantNames)) return propellantCombinationConfig;
             }
 
+            // If there is only one propellant, return a simple config
+            if (propellantModules.Count == 1)
+            {
+                var propellantName = propellantModules.First().GetResourceName(useOriginalResourceNames);
+                if (propellantConfigs.ContainsKey(propellantName)) return propellantConfigs[propellantName];
+                return null;
+            }
+
             // Otherwise generate a new combination, which we can only do with a pair of fuel and oxidizer
-            if (propellantNames.Count != 2) return null;
+            if (propellantModules.Count != 2) return null;
+            // Both the fuel and oxidizer must be used in engine data computation
+            if (propellantModules[0].ignoreForIsp || propellantModules[1].ignoreForIsp) return null;
+            // If both have ratios set, propellants should have been created directly above
+            // If either one has a ratio set, just ignore it (e.g. the fuel in a jet-rocket multimode engine)
+            if (propellantModules[0].ratio != 0 && propellantModules[1].ratio != 0) return null;
 
             PropellantConfig fuelConfig = null;
             PropellantConfig oxidizerConfig = null;
-            foreach (var propellantConfigNode in propellantConfigNodes)
+
+            for (int i = 0; i < 2; i++)
             {
-                var propellantConfig = new PropellantConfig(propellantConfigNode);
-                if (propellantNames.Contains(propellantConfig.ResourceName))
+                var propellantModuleResourceName = propellantModules[i].GetResourceName(useOriginalResourceNames);
+                foreach (var propellantConfig in propellantConfigs.Values)
                 {
-                    if (!propellantConfig.IsOxidizer) fuelConfig = propellantConfig;
-                    else oxidizerConfig = propellantConfig;
-                    if (!(fuelConfig is null) && !(oxidizerConfig is null)) break;
+                    if (propellantConfig.Propellants.Count != 1) continue; // Should only be single propellants here, but just in case
+
+                    if (propellantConfig.Propellants.First().name == propellantModuleResourceName)
+                    {
+                        if (propellantConfig.IsOxidizer) oxidizerConfig = propellantConfig;
+                        else fuelConfig = propellantConfig;
+                        break;
+                    }
                 }
             }
             if (fuelConfig is null || oxidizerConfig is null) return null;
@@ -236,12 +306,14 @@ namespace FuelMixer
             return new PropellantCombinationConfig(fuelConfig, oxidizerConfig);
         }
 
-        private List<ModuleFuelMixerPropellant> GetConnectedPropellantModules()
+        private List<ModuleFuelMixerPropellant> GetConnectedPropellantModules(bool requireGoodResource)
         {
             var propellantModules = new List<ModuleFuelMixerPropellant>();
             foreach (var module in part.GetComponents<ModuleFuelMixerPropellant>())
             {
-                if (module.engineID == engineID) propellantModules.Add(module);
+                if (module.engineID != engineID) continue;
+                if (requireGoodResource && PartResourceLibrary.Instance.GetDefinition(module.resourceName) is null) continue;
+                propellantModules.Add(module);
             }
             return propellantModules;
         }
@@ -264,7 +336,7 @@ namespace FuelMixer
             if (OriginalPropellantConfig is null || CurrentPropellantConfig is null) return;
 
             var totalVolume = 0f;
-            foreach (var propellantModule in GetConnectedPropellantModules())
+            foreach (var propellantModule in GetConnectedPropellantModules(false))
             {
                 totalVolume += propellantModule.addedVolume;
             }
@@ -282,11 +354,8 @@ namespace FuelMixer
                 var volume = totalVolume * propellant.ratio / totalRatio;
                 var maxAmount = volume * unitsPerVolume;
                 var density = resourceDefinition.density * (unitsPerVolume / resourceDefinition.volume);
-                if (propellant.name == resourceName)
-                {
-                    MassCurrent += GetTankMass(volume, density);
-                    CostCurrent += maxAmount * resourceDefinition.unitCost;
-                }
+                MassCurrent += GetTankMass(volume, density);
+                CostCurrent += maxAmount * resourceDefinition.unitCost;
 
                 var resourceNode = new ConfigNode();
                 resourceNode.name = "RESOURCE";
@@ -304,10 +373,8 @@ namespace FuelMixer
             public Keyframe[] ispKeys;
         }
 
-        EngineData GetEngineData(float maxThrustOriginal, float ispVacuumOriginal, float ispSeaLevelOriginal, float g)
+        EngineData GetEngineData(float maxThrustOriginal, float ispVacuumOriginal, float ispSeaLevelOriginal, float g, bool useVelCurve)
         {
-            EngineData engineData;
-
             var thrustMultiplier = CurrentPropellantConfig.ThrustMultiplier / OriginalPropellantConfig.ThrustMultiplier;
             thrustMultiplier = Mathf.Round(thrustMultiplier * 100) / 100;
             var thrustChange = Mathf.Round(maxThrustOriginal * (thrustMultiplier - 1) / 0.1f) * 0.1f;
@@ -320,19 +387,25 @@ namespace FuelMixer
             var ispVacuumChange = Mathf.Round(ispVacuumOriginal * (ispVacuumMultiplier - 1));
             if (Mathf.Abs(ispVacuumChange) > 10) ispVacuumChange = Mathf.Round(ispVacuumChange / 5) * 5;
             var ispVacuum = ispVacuumOriginal + ispVacuumChange;
+            var ispKeys = new List<Keyframe> { new Keyframe(0, ispVacuum) };
 
-            var ispSeaLevelMultiplier = 1 + (ispVacuumMultiplier - 1) * (2.7f * ispVacuumOriginal / ispSeaLevelOriginal - 1.7f);
-            ispSeaLevelMultiplier = Mathf.Round(ispSeaLevelMultiplier * 100) / 100;
-            var ispSeaLevelChange = Mathf.Round(ispSeaLevelOriginal * (ispSeaLevelMultiplier - 1));
-            if (Mathf.Abs(ispSeaLevelChange) > 10) ispSeaLevelChange = Mathf.Round(ispSeaLevelChange / 5) * 5;
-            var ispSeaLevel = ispSeaLevelOriginal + ispSeaLevelChange;
+            if (!useVelCurve)
+            {
+                //var ispSeaLevelMultiplier = 1 + (ispVacuumMultiplier - 1) * (2.7f * ispVacuumOriginal / ispSeaLevelOriginal - 1.7f);
+                var ispSeaLevelMultiplier = Mathf.Pow(ispVacuumMultiplier, 1 / thrustMultiplier);
+                if (ispSeaLevelMultiplier < 0) ispSeaLevelMultiplier = 0;
+                ispSeaLevelMultiplier = Mathf.Round(ispSeaLevelMultiplier * 100) / 100;
+                var ispSeaLevelChange = Mathf.Round(ispSeaLevelOriginal * (ispSeaLevelMultiplier - 1));
+                if (Mathf.Abs(ispSeaLevelChange) > 10) ispSeaLevelChange = Mathf.Round(ispSeaLevelChange / 5) * 5;
+                var ispSeaLevel = ispSeaLevelOriginal + ispSeaLevelChange;
+                ispKeys.Add(new Keyframe(1, ispSeaLevel));
+                ispKeys.Add(new Keyframe(12, 0.001f));
+            }
 
+            EngineData engineData;
             engineData.maxThrust = maxThrust;
             engineData.maxFuelFlow = maxThrust / (g * ispVacuum);
-            engineData.ispKeys = new Keyframe[3]
-            {
-                new Keyframe(0, ispVacuum), new Keyframe(1, ispSeaLevel), new Keyframe(12, 0.001f)
-            };
+            engineData.ispKeys = ispKeys.ToArray();
 
             return engineData;
         }
@@ -344,7 +417,7 @@ namespace FuelMixer
             var engineModule = GetEngineModule();
             if (engineModule is null) return;
 
-            var engineData = GetEngineData(EngineMaxThrustOriginal, EngineIspVacuumOriginal, EngineIspSeaLevelOriginal, engineModule.g);
+            var engineData = GetEngineData(EngineMaxThrustOriginal, EngineIspVacuumOriginal, EngineIspSeaLevelOriginal, engineModule.g, engineModule.useVelCurve);
 
             engineModule.maxThrust = engineData.maxThrust;
             engineModule.maxFuelFlow = engineData.maxFuelFlow;
@@ -360,7 +433,7 @@ namespace FuelMixer
             var rcsModule = GetRCSModule();
             if (rcsModule is null) return;
 
-            var engineData = GetEngineData(RCSThrusterPowerOriginal, RCSIspSeaLevelOriginal, RCSIspVacuumOriginal, (float)rcsModule.G);
+            var engineData = GetEngineData(RCSThrusterPowerOriginal, RCSIspSeaLevelOriginal, RCSIspVacuumOriginal, (float)rcsModule.G, false);
 
             rcsModule.thrusterPower = engineData.maxThrust;
             rcsModule.maxFuelFlow = engineData.maxFuelFlow;

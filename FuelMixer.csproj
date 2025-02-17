@@ -33,6 +33,7 @@
   <ItemGroup>
     <Compile Include="ModuleFuelMixerPropellant.cs" />
     <Compile Include="PropellantCombinationConfig.cs" />
+    <Compile Include="PropellantConfigBase.cs" />
     <Compile Include="PropellantConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
