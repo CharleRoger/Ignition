@@ -102,37 +102,43 @@ namespace FuelMixer
         [KSPField(isPersistant = true)]
         public float RCSIspSeaLevelOriginal = 0;
 
+        private void AbsorbMassAndCost(string resource)
+        {
+            if (resource is null) return;
+
+            if (!part.Resources.Contains(resource)) return;
+
+            var resourceAmount = (float)part.Resources.Get(resource).maxAmount;
+            var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(resource);
+
+            if (resourceAmount > 0 && resourceDefinition.density > 0)
+            {
+                var unitsPerVolume = GetUnitsPerVolume(resource);
+                var density = resourceDefinition.density * (unitsPerVolume / resourceDefinition.volume);
+                var volume = resourceAmount / unitsPerVolume;
+                MassOriginal += GetTankMass(volume, density);
+                CostOriginal += resourceAmount * resourceDefinition.unitCost;
+            }
+        }
+
+        private void RemoveResource(string resource)
+        {
+            if (resource is null) return;
+
+            part.Resources.Remove(resource);
+        }
+
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
 
-            if (!(removeResource is null) && part.Resources.Contains(removeResource))
+            bool massAndCostSet = MassOriginal != 0;
+
+            foreach (var resource in new []{ removeResource, resourceNameOriginal, resourceNamePrevious })
             {
-                var resourceAmount = (float)part.Resources.Get(removeResource).maxAmount;
-                if (MassOriginal == 0)
-                {
-                    var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(removeResource);
-                    if (resourceDefinition.density > 0)
-                    {
-                        var unitsPerVolume = GetUnitsPerVolume(removeResource);
-                        var density = resourceDefinition.density * (unitsPerVolume / resourceDefinition.volume);
-                        var volume = resourceAmount / unitsPerVolume;
-                        MassOriginal = GetTankMass(volume, density);
-                        CostOriginal = resourceAmount * resourceDefinition.unitCost;
-                    }
-                }
-
-                part.Resources.Remove(removeResource);
+                if (!massAndCostSet) AbsorbMassAndCost(resource);
+                RemoveResource(resource);
             }
-
-            if (resourceNameOriginal is null)
-            {
-                resourceNameOriginal = resourceName;
-                resourceNamePrevious = resourceName;
-            }
-
-            if (!(resourceNameOriginal is null)) part.RemoveResource(resourceNameOriginal);
-            if (!(resourceNamePrevious is null)) part.RemoveResource(resourceNamePrevious);
             resourceNamePrevious = resourceName;
 
             _originalPropellantConfig = null;
@@ -143,9 +149,10 @@ namespace FuelMixer
             var engineModule = GetEngineModule();
             if (!(engineModule is null))
             {
-                if (EngineMaxThrustOriginal == 0)
+                if (EngineMaxThrustOriginal == 0 && engineModule.atmosphereCurve.Curve.keys.Length > 0)
                 {
                     EngineMaxThrustOriginal = engineModule.maxThrust;
+                    int thing = engineModule.atmosphereCurve.Curve.keys.Length;
                     EngineIspVacuumOriginal = engineModule.atmosphereCurve.Curve.keys[0].value;
                     if (!engineModule.useVelCurve)
                     {
@@ -213,7 +220,7 @@ namespace FuelMixer
 
         private PropellantConfigBase GetPropellantConfig(bool useOriginalResourceNames)
         {
-            var propellantModules = GetConnectedPropellantModules(true);
+            var propellantModules = GetConnectedPropellantModules(true, useOriginalResourceNames);
             
             var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("FuelMixerPropellantConfig");
             var propellantConfigs = new Dictionary<string, PropellantConfig>();
@@ -271,7 +278,7 @@ namespace FuelMixer
             if (propellantModules.Count == 1)
             {
                 var propellantName = propellantModules.First().GetResourceName(useOriginalResourceNames);
-                if (propellantConfigs.ContainsKey(propellantName)) return propellantConfigs[propellantName];
+                if (!(propellantName is null) && propellantConfigs.ContainsKey(propellantName)) return propellantConfigs[propellantName];
                 return null;
             }
 
@@ -306,13 +313,14 @@ namespace FuelMixer
             return new PropellantCombinationConfig(fuelConfig, oxidizerConfig);
         }
 
-        private List<ModuleFuelMixerPropellant> GetConnectedPropellantModules(bool requireGoodResource)
+        private List<ModuleFuelMixerPropellant> GetConnectedPropellantModules(bool requireGoodResource, bool useOriginalResourceNames)
         {
             var propellantModules = new List<ModuleFuelMixerPropellant>();
             foreach (var module in part.GetComponents<ModuleFuelMixerPropellant>())
             {
                 if (module.engineID != engineID) continue;
-                if (requireGoodResource && PartResourceLibrary.Instance.GetDefinition(module.resourceName) is null) continue;
+                var resource = module.GetResourceName(useOriginalResourceNames);
+                if (requireGoodResource && (resource is null || PartResourceLibrary.Instance.GetDefinition(resource) is null)) continue;
                 propellantModules.Add(module);
             }
             return propellantModules;
@@ -336,7 +344,7 @@ namespace FuelMixer
             if (OriginalPropellantConfig is null || CurrentPropellantConfig is null) return;
 
             var totalVolume = 0f;
-            foreach (var propellantModule in GetConnectedPropellantModules(false))
+            foreach (var propellantModule in GetConnectedPropellantModules(false, true))
             {
                 totalVolume += propellantModule.addedVolume;
             }
@@ -354,8 +362,11 @@ namespace FuelMixer
                 var volume = totalVolume * propellant.ratio / totalRatio;
                 var maxAmount = volume * unitsPerVolume;
                 var density = resourceDefinition.density * (unitsPerVolume / resourceDefinition.volume);
-                MassCurrent += GetTankMass(volume, density);
-                CostCurrent += maxAmount * resourceDefinition.unitCost;
+                if (propellant.name == resourceName)
+                {
+                    MassCurrent += GetTankMass(volume, density);
+                    CostCurrent += maxAmount * resourceDefinition.unitCost;
+                }
 
                 var resourceNode = new ConfigNode();
                 resourceNode.name = "RESOURCE";
