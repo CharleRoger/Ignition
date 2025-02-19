@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static FuelMixer.PropellantCombinationConfig;
 
 namespace FuelMixer
 {
@@ -68,15 +67,19 @@ namespace FuelMixer
         public float addedVolume = 0;
 
         [KSPField(isPersistant = true)]
-        public float MassOriginal = 0;
-        public float MassCurrent = 0;
-        public float GetModuleMass(float baseMass, ModifierStagingSituation situation) => MassCurrent;
+        public float addedMass = 0;
+
+        [KSPField(isPersistant = true)]
+        public float currentAddedMass = 0;
+        public float GetModuleMass(float baseMass, ModifierStagingSituation situation) => currentAddedMass;
         public ModifierChangeWhen GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
 
         [KSPField(isPersistant = true)]
-        public float CostOriginal;
-        public float CostCurrent;
-        public float GetModuleCost(float baseCost, ModifierStagingSituation situation) => CostCurrent;
+        public float addedCost = 0;
+
+        [KSPField(isPersistant = true)]
+        public float currentAddedCost;
+        public float GetModuleCost(float baseCost, ModifierStagingSituation situation) => currentAddedCost;
         public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.FIXED;
 
         // Engine
@@ -102,25 +105,6 @@ namespace FuelMixer
         [KSPField(isPersistant = true)]
         public float RCSIspSeaLevelOriginal = 0;
 
-        private void AbsorbMassAndCost(string resource)
-        {
-            if (resource is null) return;
-
-            if (!part.Resources.Contains(resource)) return;
-
-            var resourceAmount = (float)part.Resources.Get(resource).maxAmount;
-            var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(resource);
-
-            if (resourceAmount > 0 && resourceDefinition.density > 0)
-            {
-                var unitsPerVolume = GetUnitsPerVolume(resource);
-                var density = resourceDefinition.density * (unitsPerVolume / resourceDefinition.volume);
-                var volume = resourceAmount / unitsPerVolume;
-                MassOriginal += GetTankMass(volume, density);
-                CostOriginal += resourceAmount * resourceDefinition.unitCost;
-            }
-        }
-
         private void RemoveResource(string resource)
         {
             if (resource is null) return;
@@ -128,53 +112,75 @@ namespace FuelMixer
             part.Resources.Remove(resource);
         }
 
+        private void InitialiseAddedMassAndCost()
+        {
+            if (addedMass != 0 && addedCost != 0) return;
+            if (addedVolume == 0) return;
+            if (removeResource is null) return;
+
+            var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(removeResource);
+            if (resourceDefinition is null) return;
+
+            var unitVolume = GetUnitVolume(removeResource);
+            var volume = 5 * addedVolume; // Factor of 5 converts to litres
+            var density = resourceDefinition.density / unitVolume;
+            var amount = volume / unitVolume;
+
+            if (addedMass == 0) addedMass = -GetTankMass(volume, density);
+            if (addedCost == 0) addedCost = -amount * resourceDefinition.unitCost;
+        }
+
+        private void InitialiseResources()
+        {
+            if (resourceNameOriginal == "") resourceNameOriginal = resourceName;
+
+            foreach (var resource in new[] { removeResource, resourceNameOriginal, resourceNamePrevious }) RemoveResource(resource);
+
+            resourceNamePrevious = resourceName;
+        }
+
+        private void InitialiseEngineStats()
+        {
+            if (EngineMaxThrustOriginal != 0) return;
+
+            var engineModule = GetEngineModule();
+            if (engineModule == null) return;
+            if (engineModule.atmosphereCurve.Curve.keys.Length == 0) return;
+
+            EngineMaxThrustOriginal = engineModule.maxThrust;
+            EngineIspVacuumOriginal = engineModule.atmosphereCurve.Curve.keys[0].value;
+            if (!engineModule.useVelCurve) EngineIspSeaLevelOriginal = engineModule.atmosphereCurve.Curve.keys[1].value;
+        }
+
+        private void InitialiseRCSStats()
+        {
+            if (RCSThrusterPowerOriginal != 0) return;
+
+            var rcsModule = GetRCSModule();
+            if (rcsModule is null) return;
+
+            RCSThrusterPowerOriginal = rcsModule.thrusterPower;
+            RCSIspVacuumOriginal = rcsModule.atmosphereCurve.Curve.keys[0].value;
+            RCSIspSeaLevelOriginal = rcsModule.atmosphereCurve.Curve.keys[1].value;
+        }
+
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
 
-            bool massAndCostSet = MassOriginal != 0;
-
-            foreach (var resource in new []{ removeResource, resourceNameOriginal, resourceNamePrevious })
-            {
-                if (!massAndCostSet) AbsorbMassAndCost(resource);
-                RemoveResource(resource);
-            }
-            resourceNamePrevious = resourceName;
-
             _originalPropellantConfig = null;
             _currentPropellantConfig = null;
 
+            InitialiseAddedMassAndCost();
+
+            InitialiseResources();
             ApplyPropellantCombinationToResources();
 
-            var engineModule = GetEngineModule();
-            if (!(engineModule is null))
-            {
-                if (EngineMaxThrustOriginal == 0 && engineModule.atmosphereCurve.Curve.keys.Length > 0)
-                {
-                    EngineMaxThrustOriginal = engineModule.maxThrust;
-                    int thing = engineModule.atmosphereCurve.Curve.keys.Length;
-                    EngineIspVacuumOriginal = engineModule.atmosphereCurve.Curve.keys[0].value;
-                    if (!engineModule.useVelCurve)
-                    {
-                        EngineIspSeaLevelOriginal = engineModule.atmosphereCurve.Curve.keys[1].value;
-                    }
-                }
+            InitialiseEngineStats();
+            ApplyPropellantCombinationToEngineModule();
 
-                ApplyPropellantCombinationToEngineModule();
-            }
-
-            var rcsModule = GetRCSModule();
-            if (!(rcsModule is null))
-            {
-                if (RCSThrusterPowerOriginal == 0)
-                {
-                    RCSThrusterPowerOriginal = rcsModule.thrusterPower;
-                    RCSIspVacuumOriginal = rcsModule.atmosphereCurve.Curve.keys[0].value;
-                    RCSIspSeaLevelOriginal = rcsModule.atmosphereCurve.Curve.keys[1].value;
-                }
-
-                ApplyPropellantCombinationToRCS();
-            }
+            InitialiseRCSStats();
+            ApplyPropellantCombinationToRCS();
         }
 
         private ModuleEngines GetEngineModule()
@@ -326,54 +332,87 @@ namespace FuelMixer
             return propellantModules;
         }
 
-        private float GetUnitsPerVolume(string resourceName)
+        private float GetUnitVolume(string resourceName)
         {
-            // Unit volume = 5 litres, as per B9PartSwitch
-            if (resourceName == "LiquidFuel" || resourceName == "Oxidizer") return 1f;
-            if (resourceName == "MonoPropellant") return 1.5f;
-            return 5f;
+            if (resourceName == "LiquidFuel") return 5f;
+            if (resourceName == "Oxidizer") return 5f;
+            if (resourceName == "MonoPropellant") return 4f;
+            return 1f;
         }
 
         private float GetTankMass(float volume, float resourceDensity)
         {
-            return volume * Mathf.Round(2500000 * Mathf.Pow(resourceDensity, 2 / 3f)) / 40000000;
+            return volume * Mathf.Round(2500000 * Mathf.Pow(resourceDensity, 2 / 3f)) / 200000000;
+        }
+
+        private void SetAddedMassAndCostToZero()
+        {
+            currentAddedMass = 0;
+            currentAddedCost = 0;
+        }
+
+        private void SetAddedMassAndCostToOriginal()
+        {
+            currentAddedMass = addedMass;
+            currentAddedCost = addedCost;
+        }
+
+        private void ApplyPropellantToResources(Propellant propellant, float volume)
+        {
+            var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(propellant.name);
+            var unitVolume = GetUnitVolume(propellant.name);
+            var density = resourceDefinition.density / unitVolume;
+
+            var maxAmount = volume / unitVolume;
+
+            currentAddedMass += GetTankMass(volume, density);
+            currentAddedCost += maxAmount * resourceDefinition.unitCost;
+
+            var resourceNode = new ConfigNode();
+            resourceNode.name = "RESOURCE";
+            resourceNode.AddValue("name", propellant.name);
+            resourceNode.AddValue("amount", maxAmount);
+            resourceNode.AddValue("maxAmount", maxAmount);
+            part.SetResource(resourceNode);
         }
 
         private void ApplyPropellantCombinationToResources()
         {
             if (OriginalPropellantConfig is null || CurrentPropellantConfig is null) return;
 
-            var totalVolume = 0f;
-            foreach (var propellantModule in GetConnectedPropellantModules(false, true))
+            var propellantModules = GetConnectedPropellantModules(false, false);
+
+            foreach (var propellantModule in propellantModules)
             {
-                totalVolume += propellantModule.addedVolume;
+                propellantModule.SetAddedMassAndCostToZero();
+            }
+
+            if (CurrentPropellantConfig.Propellants.Count == 0) return;
+
+            var totalVolume = 0f;
+            foreach (var propellantModule in propellantModules)
+            {
+                totalVolume += 5 * propellantModule.addedVolume; // Factor of 5 converts to litres
             }
             if (totalVolume == 0) return;
 
             var totalRatio = 0f;
-            foreach (var propellant in CurrentPropellantConfig.Propellants) totalRatio += propellant.ratio;
-
-            MassCurrent = -MassOriginal;
-            CostCurrent = -CostOriginal;
+            var propellants = new Dictionary<string, Propellant>();
             foreach (var propellant in CurrentPropellantConfig.Propellants)
             {
-                var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(propellant.name);
-                var unitsPerVolume = GetUnitsPerVolume(propellant.name);
-                var volume = totalVolume * propellant.ratio / totalRatio;
-                var maxAmount = volume * unitsPerVolume;
-                var density = resourceDefinition.density * (unitsPerVolume / resourceDefinition.volume);
-                if (propellant.name == resourceName)
-                {
-                    MassCurrent += GetTankMass(volume, density);
-                    CostCurrent += maxAmount * resourceDefinition.unitCost;
-                }
+                totalRatio += propellant.ratio;
+                propellants[propellant.name] = propellant;
+            }
 
-                var resourceNode = new ConfigNode();
-                resourceNode.name = "RESOURCE";
-                resourceNode.AddValue("name", propellant.name);
-                resourceNode.AddValue("amount", maxAmount);
-                resourceNode.AddValue("maxAmount", maxAmount);
-                part.SetResource(resourceNode);
+            foreach (var propellantModule in propellantModules)
+            {
+                propellantModule.SetAddedMassAndCostToOriginal();
+                if (propellants.ContainsKey(propellantModule.resourceName))
+                {
+                    var propellant = propellants[propellantModule.resourceName];
+                    var volume = totalVolume * propellant.ratio / totalRatio;
+                    propellantModule.ApplyPropellantToResources(propellant, volume);
+                }
             }
         }
 
@@ -402,7 +441,6 @@ namespace FuelMixer
 
             if (!useVelCurve)
             {
-                //var ispSeaLevelMultiplier = 1 + (ispVacuumMultiplier - 1) * (2.7f * ispVacuumOriginal / ispSeaLevelOriginal - 1.7f);
                 var ispSeaLevelMultiplier = Mathf.Pow(ispVacuumMultiplier, 1 / thrustMultiplier);
                 if (ispSeaLevelMultiplier < 0) ispSeaLevelMultiplier = 0;
                 ispSeaLevelMultiplier = Mathf.Round(ispSeaLevelMultiplier * 100) / 100;
