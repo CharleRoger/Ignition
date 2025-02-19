@@ -364,6 +364,14 @@ namespace FuelMixer
             var density = resourceDefinition.density / unitVolume;
 
             var maxAmount = volume / unitVolume;
+            var amount = float.MaxValue;
+            if (part.Resources.Contains(propellant.name))
+            {
+                var previousMaxAmount = part.Resources.Get(propellant.name).maxAmount;
+                var previousAmount = part.Resources.Get(propellant.name).amount;
+                if (previousAmount < previousMaxAmount) amount = (float)part.Resources.Get(propellant.name).amount;
+            }
+            if (amount > maxAmount) amount = maxAmount;
 
             currentAddedMass += GetTankMass(volume, density);
             currentAddedCost += maxAmount * resourceDefinition.unitCost;
@@ -371,7 +379,7 @@ namespace FuelMixer
             var resourceNode = new ConfigNode();
             resourceNode.name = "RESOURCE";
             resourceNode.AddValue("name", propellant.name);
-            resourceNode.AddValue("amount", maxAmount);
+            resourceNode.AddValue("amount", amount);
             resourceNode.AddValue("maxAmount", maxAmount);
             part.SetResource(resourceNode);
         }
