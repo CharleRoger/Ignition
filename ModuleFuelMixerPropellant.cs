@@ -470,6 +470,7 @@ namespace FuelMixer
         private void ApplyPropellantCombinationToEngineModule()
         {
             if (OriginalPropellantConfig is null || CurrentPropellantConfig is null) return;
+            if (OriginalPropellantConfig.Propellants.Count == 0) return;
 
             var engineModule = GetEngineModule();
             if (engineModule is null) return;
@@ -486,6 +487,7 @@ namespace FuelMixer
         private void ApplyPropellantCombinationToRCS()
         {
             if (OriginalPropellantConfig is null || CurrentPropellantConfig is null) return;
+            if (OriginalPropellantConfig.Propellants.Count == 0) return;
 
             var rcsModule = GetRCSModule();
             if (rcsModule is null) return;
