@@ -5,12 +5,12 @@ This is an experimental plugin still very much in development, use at your own r
 
 ## Features
 ### Supported
-- Automated computation of mixture ratio, thrust multiplier and Isp multiplier
+- Automated computation of bipropellant mixture ratio, thrust multiplier and Isp multiplier
 - User-definable override propellant mixtures
 - Monopropellant fuel tanks, engines and RCS thrusters
 - Bipropellant fuel tanks, engines and RCS thrusters
-### Planned
 - Jet engines
+### Planned
 - Tripropellant+ fuel tanks, engines and RCS thrusters
 - Relevant stats displayed in the PAW
 
@@ -84,7 +84,11 @@ FuelMixer is implemented on a part using `ModuleFuelMixerPropellant` with the fo
 - `moduleID`: Optional arbitrary string identifier.
 - `resourceName`: Name of the resource to use, used to look up the corresponding `FuelMixerPropellantConfig` or `FuelMixerPropellantCombinationConfig` where applicable.
 - `removeResource`: Name of a resource whose `RESOURCE` node will be removed from the part, for replacing existing tanks.
+- `ratio`: Fixed ratio to override auto-computed mixture ratios. Ratio should be specified on either all the propellants or none of them. Useful for e.g. jet engines with a switchable fuel but a fixed fuel:IntakeAir ratio.
+- `ignoreForIsp`: Whether this propellant should be ignored in thrust and isp computations, e.g. for the IntakeAir above.
 - `addedVolume`: Volume added to the total volume considered by the set of all active `ModuleFuelMixerPropellant`s.
+- `addedMass`: Mass added to the part.
+- `addedCost`: Cost added to the part.
 - `engineID`: The `engineID` of a `ModuleEngines*` to act upon. If unspecified, the module will target the first `ModuleEngines*` it finds.
 
 All instances of this module work together and act on stored resources, engine modules and RCS modules simultaneously.
