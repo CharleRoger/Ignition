@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using KSP.Localization;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -87,23 +88,39 @@ namespace FuelMixer
         public string engineID = "";
 
         [KSPField(isPersistant = true)]
-        public float EngineMaxThrustOriginal = 0;
+        public float EngineMaxThrustOriginal = -1;
 
         [KSPField(isPersistant = true)]
-        public float EngineIspVacuumOriginal = 0;
+        public float EngineIspVacuumOriginal = -1;
 
         [KSPField(isPersistant = true)]
-        public float EngineIspSeaLevelOriginal = 0;
+        public float EngineIspSeaLevelOriginal = -1;
+
+        [KSPField(guiName = "<b>Thrust</b>")]
+        [UI_Label(scene = UI_Scene.All)]
+        public string EngineThrustString = "";
+
+        [KSPField(guiName = "<b>Isp</b>")]
+        [UI_Label(scene = UI_Scene.All)]
+        public string EngineIspString = "";
 
         // RCS
         [KSPField(isPersistant = true)]
-        public float RCSThrusterPowerOriginal = 0;
+        public float RCSThrusterPowerOriginal = -1;
 
         [KSPField(isPersistant = true)]
-        public float RCSIspVacuumOriginal = 0;
+        public float RCSIspVacuumOriginal = -1;
 
         [KSPField(isPersistant = true)]
-        public float RCSIspSeaLevelOriginal = 0;
+        public float RCSIspSeaLevelOriginal = -1;
+
+        [KSPField(guiName = "<b>Thrust</b>")]
+        [UI_Label(scene = UI_Scene.All)]
+        public string RCSThrustString = "";
+
+        [KSPField(guiName = "<b>Isp</b>")]
+        [UI_Label(scene = UI_Scene.All)]
+        public string RCSIspString = "";
 
         private void RemoveResource(string resource)
         {
@@ -139,29 +156,135 @@ namespace FuelMixer
             resourceNamePrevious = resourceName;
         }
 
-        private void InitialiseEngineStats()
+        private void InitialiseEngineStats(ModuleEngines engineModule)
         {
-            if (EngineMaxThrustOriginal != 0) return;
-
-            var engineModule = GetEngineModule();
-            if (engineModule == null) return;
+            if (engineModule is null) return;
             if (engineModule.atmosphereCurve.Curve.keys.Length == 0) return;
+
+            if (EngineMaxThrustOriginal != -1) return;
 
             EngineMaxThrustOriginal = engineModule.maxThrust;
             EngineIspVacuumOriginal = engineModule.atmosphereCurve.Curve.keys[0].value;
             if (!engineModule.useVelCurve) EngineIspSeaLevelOriginal = engineModule.atmosphereCurve.Curve.keys[1].value;
         }
 
-        private void InitialiseRCSStats()
+        private void InitialiseRCSStats(ModuleRCS rcsModule)
         {
-            if (RCSThrusterPowerOriginal != 0) return;
-
-            var rcsModule = GetRCSModule();
             if (rcsModule is null) return;
+            if (rcsModule.atmosphereCurve.Curve.keys.Length == 0) return;
+
+            if (RCSThrusterPowerOriginal != -1) return;
 
             RCSThrusterPowerOriginal = rcsModule.thrusterPower;
             RCSIspVacuumOriginal = rcsModule.atmosphereCurve.Curve.keys[0].value;
             RCSIspSeaLevelOriginal = rcsModule.atmosphereCurve.Curve.keys[1].value;
+        }
+
+        private void InitialiseInfoStrings(bool engineNotRCS, bool active, string groupName = "")
+        {
+            var moduleType = engineNotRCS ? "Engine" : "RCS";
+            if (groupName == "") groupName = moduleType;
+
+            Fields[moduleType + "ThrustString"].guiActiveEditor = active;
+            Fields[moduleType + "IspString"].guiActiveEditor = active;
+
+            Fields[moduleType + "ThrustString"].guiActive = active;
+            Fields[moduleType + "IspString"].guiActive = active;
+
+            if (!active) return;
+
+            Fields[moduleType + "ThrustString"].group.name = groupName;
+            Fields[moduleType + "IspString"].group.name = groupName;
+
+            Fields[moduleType + "ThrustString"].group.displayName = groupName;
+            Fields[moduleType + "IspString"].group.displayName = groupName;
+        }
+
+        private void InitialiseEngineInfoStrings(ModuleEngines engineModule)
+        {
+            InitialiseInfoStrings(true, !(engineModule is null) && GetConnectedPropellantModules(false, false).First().moduleID == moduleID, engineID);
+        }
+
+        private void InitialiseRCSInfoStrings(ModuleRCS rcsModule)
+        {
+            InitialiseInfoStrings(false, !(rcsModule is null));
+        }
+
+        private string GetValueString(string unit, float vacuumOriginal, float vacuum, float seaLevel = -1)
+        {
+            var str = vacuum.ToString("0.0") + unit;
+
+            if (seaLevel != -1)
+            {
+                str = seaLevel.ToString("0.0") + unit + " — " + str;
+            }
+
+            if (vacuum > vacuumOriginal)
+            {
+                str += " (<color=#44FF44>+" + Mathf.Round(100 * (vacuum / vacuumOriginal - 1)) + "</color>%)";
+            }
+            else if (vacuum < vacuumOriginal)
+            {
+                str += " (<color=#FF8888>-" + Mathf.Round(100 * (1 - vacuum / vacuumOriginal)) + "</color>%)";
+            }
+
+            return str;
+        }
+
+        private void SetEngineInfoStrings(ModuleEngines engineModule)
+        {
+            if (engineModule is null) return;
+
+            var firstPropellantModule = GetConnectedPropellantModules(false, false).First();
+
+            if (moduleID != firstPropellantModule.moduleID)
+            {
+                firstPropellantModule.SetEngineInfoStrings(engineModule);
+                return;
+            }
+
+            var thrustVacuum = engineModule.maxThrust;
+            var ispVacuum = engineModule.atmosphereCurve.Curve.keys[0].value;
+
+            if (engineModule.atmosphereCurve.Curve.keys.Length > 1)
+            {
+                var ispSeaLevel = engineModule.atmosphereCurve.Curve.keys[1].value;
+                EngineThrustString = GetValueString("kN", EngineMaxThrustOriginal, thrustVacuum, thrustVacuum * ispSeaLevel / ispVacuum);
+                EngineIspString = GetValueString("s", EngineIspVacuumOriginal, ispVacuum, ispSeaLevel);
+            }
+            else
+            {
+                EngineThrustString = GetValueString("kN", EngineMaxThrustOriginal, thrustVacuum);
+                EngineIspString = GetValueString("s", EngineIspVacuumOriginal, ispVacuum);
+            }
+        }
+
+        private void SetRCSInfoStrings(ModuleRCS rcsModule)
+        {
+            if (rcsModule is null) return;
+
+            var firstPropellantModule = GetConnectedPropellantModules(false, false).First();
+
+            if (moduleID != firstPropellantModule.moduleID)
+            {
+                firstPropellantModule.SetRCSInfoStrings(rcsModule);
+                return;
+            }
+
+            var thrustVacuum = rcsModule.thrusterPower;
+            var ispVacuum = rcsModule.atmosphereCurve.Curve.keys[0].value;
+
+            if (rcsModule.atmosphereCurve.Curve.keys.Length > 1)
+            {
+                var ispSeaLevel = rcsModule.atmosphereCurve.Curve.keys[1].value;
+                RCSThrustString = GetValueString("kN", RCSThrusterPowerOriginal, thrustVacuum, thrustVacuum * ispSeaLevel / ispVacuum);
+                RCSIspString = GetValueString("s", RCSIspVacuumOriginal, ispVacuum, ispSeaLevel);
+            }
+            else
+            {
+                RCSThrustString = GetValueString("kN", RCSThrusterPowerOriginal, thrustVacuum);
+                RCSIspString = GetValueString("s", RCSIspVacuumOriginal, ispVacuum);
+            }
         }
 
         public override void OnLoad(ConfigNode node)
@@ -176,11 +299,17 @@ namespace FuelMixer
             InitialiseResources();
             ApplyPropellantCombinationToResources();
 
-            InitialiseEngineStats();
-            ApplyPropellantCombinationToEngineModule();
+            var engineModule = GetEngineModule();
+            InitialiseEngineStats(engineModule);
+            InitialiseEngineInfoStrings(engineModule);
+            ApplyPropellantCombinationToEngineModule(engineModule);
+            SetEngineInfoStrings(engineModule);
 
-            InitialiseRCSStats();
-            ApplyPropellantCombinationToRCS();
+            var rcsModule = GetRCSModule();
+            InitialiseRCSStats(rcsModule);
+            InitialiseRCSInfoStrings(rcsModule);
+            ApplyPropellantCombinationToRCS(rcsModule);
+            SetRCSInfoStrings(rcsModule);
         }
 
         private ModuleEngines GetEngineModule()
@@ -467,13 +596,12 @@ namespace FuelMixer
             return engineData;
         }
 
-        private void ApplyPropellantCombinationToEngineModule()
+        private void ApplyPropellantCombinationToEngineModule(ModuleEngines engineModule)
         {
+            if (engineModule is null) return;
+
             if (OriginalPropellantConfig is null || CurrentPropellantConfig is null) return;
             if (OriginalPropellantConfig.Propellants.Count == 0) return;
-
-            var engineModule = GetEngineModule();
-            if (engineModule is null) return;
 
             var engineData = GetEngineData(EngineMaxThrustOriginal, EngineIspVacuumOriginal, EngineIspSeaLevelOriginal, engineModule.g, engineModule.useVelCurve);
 
@@ -484,13 +612,12 @@ namespace FuelMixer
             engineModule.SetupPropellant();
         }
 
-        private void ApplyPropellantCombinationToRCS()
+        private void ApplyPropellantCombinationToRCS(ModuleRCS rcsModule)
         {
+            if (rcsModule is null) return;
+
             if (OriginalPropellantConfig is null || CurrentPropellantConfig is null) return;
             if (OriginalPropellantConfig.Propellants.Count == 0) return;
-
-            var rcsModule = GetRCSModule();
-            if (rcsModule is null) return;
 
             var engineData = GetEngineData(RCSThrusterPowerOriginal, RCSIspSeaLevelOriginal, RCSIspVacuumOriginal, (float)rcsModule.G, false);
 
