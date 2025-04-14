@@ -69,6 +69,30 @@ namespace FuelMixer
             }
         }
 
+        private float _ignitionPotential = 0;
+        public override float IgnitionPotential
+        {
+            get
+            {
+                if (_ignitionPotential == 0 && TotalPropellantRatio > 0)
+                {
+                    _ignitionPotential = 1;
+                    foreach (var propellant in Propellants)
+                    {
+                        if (propellant.ignoreForIsp) continue;
+
+                        _ignitionPotential *= Mathf.Pow(PropellantConfigs[propellant.name].IgnitionPotential, propellant.ratio / TotalPropellantRatio);
+                    }
+                }
+
+                return _ignitionPotential;
+            }
+            protected set
+            {
+                _ignitionPotential = value;
+            }
+        }
+
         private Dictionary<string, PropellantConfig> _propellantConfigs = null;
         private Dictionary<string, PropellantConfig> PropellantConfigs
         {

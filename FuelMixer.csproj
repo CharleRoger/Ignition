@@ -31,7 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="EngineWrapper.cs" />
+    <Compile Include="IgnitorResource.cs" />
     <Compile Include="ModuleFuelMixerPropellant.cs" />
+    <Compile Include="ModuleIgnitor.cs" />
     <Compile Include="PropellantCombinationConfig.cs" />
     <Compile Include="PropellantConfigBase.cs" />
     <Compile Include="PropellantConfig.cs" />
