@@ -10,7 +10,7 @@ namespace FuelMixer
         [KSPField(isPersistant = true)]
         public string engineID = "";
 
-        bool MultiModeEngine = false;
+        bool IsMultiModeEngine = false;
         private ModuleEngines EngineModule = null;
 
         private bool _ignited = false;
@@ -44,6 +44,7 @@ namespace FuelMixer
         {
             if (part is null || part.Modules is null) return;
 
+            // Engine modules
             var engineModules = part.FindModulesImplementing<ModuleEngines>();
             if (engineModules.Count == 1) EngineModule = engineModules.First();
             else
@@ -58,8 +59,8 @@ namespace FuelMixer
                 }
             }
             if (EngineModule is null) return;
-
             if (engineID == "") engineID = EngineModule.engineID;
+            IsMultiModeEngine = part.FindModulesImplementing<MultiModeEngine>().Count > 0;
 
             // Resources required for ignitor
             IgnitorResources.Clear();
@@ -124,7 +125,7 @@ namespace FuelMixer
         private bool ShouldBeIgnited()
         {
             bool flameout = EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
-            if ((EngineModule.requestedThrottle <= 0.0f && !MultiModeEngine) || flameout || (EngineModule.EngineIgnited == false && EngineModule.allowShutdown)) return false;
+            if ((EngineModule.requestedThrottle <= 0.0f && !IsMultiModeEngine) || flameout || (EngineModule.EngineIgnited == false && EngineModule.allowShutdown)) return false;
 
             if (!EngineModule.EngineIgnited) return vessel.ctrlState.mainThrottle > 0.0f || EngineModule.throttleLocked;
 
@@ -172,7 +173,7 @@ namespace FuelMixer
 
         private bool AttemptIgnition(ref string message)
         {
-            if (MultiModeEngine && OtherEngineModeActive() && CurrentActiveEngineID() != engineID) return true;
+            if (IsMultiModeEngine && OtherEngineModeActive() && CurrentActiveEngineID() != engineID) return true;
 
             // Use required ignitors
             var addedIgnitionPotential = 0f;
