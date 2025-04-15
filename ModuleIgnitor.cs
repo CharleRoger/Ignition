@@ -23,6 +23,10 @@ namespace Ignition
         private List<IgnitorResource> IgnitorResources = new List<IgnitorResource>();
         private Dictionary<string, PropellantConfig> PropellantConfigs = new Dictionary<string, PropellantConfig>();
 
+        [KSPField(guiName = "<b>Ignitor</b>")]
+        [UI_Label(scene = UI_Scene.All)]
+        public string IgnitorDisplayString = "";
+
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
@@ -67,6 +71,7 @@ namespace Ignition
 
             // Resources required for ignitor
             IgnitorResources.Clear();
+            IgnitorDisplayString = "";
             if (IgnitorResourcesString != "")
             {
                 foreach (var requiredResourceString in IgnitorResourcesString.Split(';'))
@@ -77,10 +82,17 @@ namespace Ignition
                         var unroundedAmount = ignitorResource.ScaledAmount * GetEngineMassRate();
                         var powerOfTen = Mathf.Pow(10, Mathf.Floor(Mathf.Log10(unroundedAmount)));
                         ignitorResource.Amount = powerOfTen * Mathf.Round(unroundedAmount / powerOfTen);
+                        IgnitorDisplayString += "\n  " + ignitorResource.Amount + " " + ignitorResource.ResourceName;
+                        if (ignitorResource.AlwaysRequired) IgnitorDisplayString += " (always consumed)";
+                        else IgnitorDisplayString += " (consumed if necessary)";
                     }
                     IgnitorResources.Add(ignitorResource);
                 }
             }
+
+            var groupName = engineID == "" ? "Engine" : engineID;
+            Fields["IgnitorDisplayString"].group.name = groupName;
+            Fields["IgnitorDisplayString"].group.displayName = groupName;
 
             // Propellant configs for ignition potential computation
             var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
