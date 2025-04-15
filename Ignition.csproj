@@ -7,8 +7,8 @@
     <ProjectGuid>{0A284B45-EC21-434C-8BD8-6078A0194305}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FuelMixer</RootNamespace>
-    <AssemblyName>FuelMixer</AssemblyName>
+    <RootNamespace>Ignition</RootNamespace>
+    <AssemblyName>Ignition</AssemblyName>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

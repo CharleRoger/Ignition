@@ -75,7 +75,7 @@ namespace Ignition
             }
 
             // Propellant configs for ignition potential computation
-            var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("FuelMixerPropellantConfig");
+            var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
             PropellantConfigs.Clear();
             foreach (var propellantConfigNode in propellantConfigNodes)
             {

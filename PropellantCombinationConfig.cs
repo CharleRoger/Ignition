@@ -100,7 +100,7 @@ namespace Ignition
             {
                 if (_propellantConfigs == null)
                 {
-                    var allPropellantConfigNodes = GameDatabase.Instance.GetConfigNodes("FuelMixerPropellantConfig");
+                    var allPropellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
                     var allPropellantConfigs = new Dictionary<string, PropellantConfig>();
                     foreach (var propellantConfigNode in allPropellantConfigNodes)
                     {

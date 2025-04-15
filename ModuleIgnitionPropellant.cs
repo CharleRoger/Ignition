@@ -357,7 +357,7 @@ namespace Ignition
         {
             var propellantModules = GetConnectedPropellantModules(true, useOriginalResourceNames);
             
-            var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("FuelMixerPropellantConfig");
+            var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
             var propellantConfigs = new Dictionary<string, PropellantConfig>();
             foreach (var propellantConfigNode in propellantConfigNodes)
             {
@@ -395,7 +395,7 @@ namespace Ignition
             // Need to account for ratio, drawStackGauge and ignoreForIsp here
 
             // If propellants have unspecified ratios, try to find a pre-configured propellant combination
-            ConfigNode[] propellantCombinationConfigNodes = GameDatabase.Instance.GetConfigNodes("FuelMixerPropellantCombinationConfig");
+            ConfigNode[] propellantCombinationConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantCombinationConfig");
             var propellantNames = new List<string>();
             foreach (var propellantModule in propellantModules) propellantNames.Add(propellantModule.GetResourceName(useOriginalResourceNames));
             foreach (var propellantCombinationConfigNode in propellantCombinationConfigNodes)
@@ -448,10 +448,10 @@ namespace Ignition
             return new PropellantCombinationConfig(fuelConfig, oxidizerConfig);
         }
 
-        private List<ModuleFuelMixerPropellant> GetConnectedPropellantModules(bool requireGoodResource, bool useOriginalResourceNames)
+        private List<ModuleIgnitionPropellant> GetConnectedPropellantModules(bool requireGoodResource, bool useOriginalResourceNames)
         {
-            var propellantModules = new List<ModuleFuelMixerPropellant>();
-            foreach (var module in part.GetComponents<ModuleFuelMixerPropellant>())
+            var propellantModules = new List<ModuleIgnitionPropellant>();
+            foreach (var module in part.GetComponents<ModuleIgnitionPropellant>())
             {
                 if (module.engineID != engineID) continue;
                 var resource = module.GetResourceName(useOriginalResourceNames);
