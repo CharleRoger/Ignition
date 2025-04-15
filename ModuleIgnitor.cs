@@ -105,26 +105,32 @@ namespace FuelMixer
             }
             else if (attemptIgnition)
             {
-                AttemptIgnition();
-            }
+                string message = "";
+                AttemptIgnition(ref message);
+                if (message != "") ScreenMessages.PostScreenMessage(message, 3f, ScreenMessageStyle.UPPER_CENTER);
 
-            if (attemptIgnition && !_ignited && EngineModule.EngineIgnited)
-            {
-                if (EngineModule is ModuleEnginesFX engineModuleFX) engineModuleFX.part.Effects.Event(engineModuleFX.flameoutEffectName, engineModuleFX.transform.hierarchyCount);
-                else
+                if (EngineModule.EngineIgnited)
                 {
-                    EngineModule.BurstFlameoutGroups();
-                    EngineModule.SetRunningGroupsActive(false);
-                }
-                
-                foreach (BaseEvent baseEvent in EngineModule.Events)
-                {
-                    if (baseEvent.name.IndexOf("shutdown", StringComparison.CurrentCultureIgnoreCase) >= 0)
+                    if (_ignited)
                     {
-                        baseEvent.Invoke();
+                        if (EngineModule is ModuleEnginesFX engineModuleFX) engineModuleFX.part.Effects.Event(engineModuleFX.engageEffectName, engineModuleFX.transform.hierarchyCount);
+                        else EngineModule.PlayEngageFX();
+                    }
+                    else
+                    {
+                        if (EngineModule is ModuleEnginesFX engineModuleFX) engineModuleFX.part.Effects.Event(engineModuleFX.flameoutEffectName, engineModuleFX.transform.hierarchyCount);
+                        else EngineModule.BurstFlameoutGroups();
+                        EngineModule.SetRunningGroupsActive(false);
+
+                        foreach (BaseEvent baseEvent in EngineModule.Events)
+                        {
+                            if (baseEvent.name.IndexOf("shutdown", StringComparison.CurrentCultureIgnoreCase) >= 0)
+                            {
+                                baseEvent.Invoke();
+                            }
+                        }
                     }
                 }
-                EngineModule.SetRunningGroupsActive(false);
             }
         }
 
@@ -170,7 +176,7 @@ namespace FuelMixer
             return false;
         }
 
-        private bool UseIgnitor(IgnitorResource ignitorResource, ref float addedIgnitionPotential, ref Dictionary<int, float> resourcesToDrain)
+        private bool UseIgnitorResource(IgnitorResource ignitorResource, ref float addedIgnitionPotential, ref Dictionary<int, float> resourcesToDrain)
         {
             double resourceAmount = 0f;
             int resourceId = PartResourceLibrary.Instance.GetDefinition(ignitorResource.Name).id;
@@ -184,7 +190,7 @@ namespace FuelMixer
             return true;
         }
 
-        private void AttemptIgnition()
+        private void AttemptIgnition(ref string message)
         {
             if (MultiModeEngine && OtherEngineModeActive() && CurrentActiveEngineID() != engineID) return;
 
@@ -195,11 +201,11 @@ namespace FuelMixer
             {
                 if (!ignitorResource.AlwaysRequired) continue;
 
-                bool success = UseIgnitor(ignitorResource, ref addedIgnitionPotential, ref resourcesToDrain);
+                bool success = UseIgnitorResource(ignitorResource, ref addedIgnitionPotential, ref resourcesToDrain);
                 if (!success)
                 {
                     // Required ignitor not satisfied
-                    ScreenMessages.PostScreenMessage("Not enough " + ignitorResource.Name + " for ignitor", 3f, ScreenMessageStyle.UPPER_CENTER);
+                    message = "Ignition failed — Not enough " + ignitorResource.Name;
                     _ignited = false;
                     return;
                 }
@@ -225,7 +231,7 @@ namespace FuelMixer
                 {
                     if (ignitorResource.AlwaysRequired) continue;
 
-                    bool success = UseIgnitor(ignitorResource, ref ignitionPotential, ref resourcesToDrain);
+                    bool success = UseIgnitorResource(ignitorResource, ref ignitionPotential, ref resourcesToDrain);
                     if (!success) missingResources.Add(ignitorResource.Name);
 
                     if (ignitionPotential > ignitionThreshold) break;
@@ -234,13 +240,14 @@ namespace FuelMixer
             if (ignitionPotential < ignitionThreshold)
             {
                 // Ignition failed
-                if (missingResources.Count > 0) ScreenMessages.PostScreenMessage("Not enough " + missingResources.First() + " for ignitor", 3f, ScreenMessageStyle.UPPER_CENTER);
-                else ScreenMessages.PostScreenMessage("Failed to achieve ignition", 3f, ScreenMessageStyle.UPPER_CENTER);
+                if (missingResources.Count > 0) message = "Ignition failed — Not enough " + missingResources.First();
+                else message = "Ignition failed — Ignitor was insufficient";
                 _ignited = false;
                 return;
             }
 
             // Ignition achieved
+            message = "Ignition!";
             foreach (var resourceToDrain in resourcesToDrain)
             {
                 part?.RequestResource(resourceToDrain.Key, resourceToDrain.Value, ResourceFlowMode.STAGE_PRIORITY_FLOW);
