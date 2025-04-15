@@ -69,7 +69,12 @@ namespace Ignition
                 foreach (var requiredResourceString in IgnitorResourcesString.Split(';'))
                 {
                     var ignitorResource = IgnitorResource.FromString(requiredResourceString);
-                    if (ignitorResource.Amount == 0) ignitorResource.Amount = ignitorResource.ScaledAmount * GetEngineMassRate();
+                    if (ignitorResource.Amount == 0 && ignitorResource.ScaledAmount > 0)
+                    {
+                        var unroundedAmount = ignitorResource.ScaledAmount * GetEngineMassRate();
+                        var powerOfTen = Mathf.Pow(10, Mathf.Floor(Mathf.Log10(unroundedAmount)) + 1);
+                        ignitorResource.Amount = powerOfTen * Mathf.Round(unroundedAmount / powerOfTen);
+                    }
                     IgnitorResources.Add(ignitorResource);
                 }
             }
