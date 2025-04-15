@@ -106,7 +106,7 @@ namespace Ignition
             bool shouldBeIgnited = ShouldBeIgnited() || OtherEngineModeActive();
 
             if (!shouldBeIgnited) _ignited = false;
-            else if (!_ignited && shouldBeIgnited)
+            else if (!_ignited)
             {
                 string message = "";
                 _ignited = AttemptIgnition(ref message);
@@ -133,20 +133,11 @@ namespace Ignition
         private bool ShouldBeIgnited()
         {
             bool flameout = EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
-            if ((EngineModule.requestedThrottle <= 0.0f && !IsMultiModeEngine) || flameout || (EngineModule.EngineIgnited == false && EngineModule.allowShutdown)) return false;
+            if ((EngineModule.requestedThrottle <= 0.0f) || flameout || (EngineModule.EngineIgnited == false && EngineModule.allowShutdown)) return false;
 
             if (!EngineModule.EngineIgnited) return vessel.ctrlState.mainThrottle > 0.0f || EngineModule.throttleLocked;
 
             return EngineModule.EngineIgnited;
-        }
-
-        string CurrentActiveEngineID()
-        {
-            foreach (var engineModule in part.FindModulesImplementing<ModuleEngines>())
-            {
-                if (engineModule.EngineIgnited == true) return engineModule.engineID;
-            }
-            return null;
         }
 
         bool OtherEngineModeActive()
@@ -155,7 +146,7 @@ namespace Ignition
             {
                 if (engineModule.engineID == engineID) continue;
 
-                bool deprived = engineModule.CheckDeprived(.01, out string propName);
+                bool deprived = engineModule.CheckDeprived(0.01, out string propName);
                 bool flameout = EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
                 if (engineModule.EngineIgnited == true && !flameout && !deprived)
                 {
@@ -181,7 +172,7 @@ namespace Ignition
 
         private bool AttemptIgnition(ref string message)
         {
-            if (IsMultiModeEngine && OtherEngineModeActive() && CurrentActiveEngineID() != engineID) return true;
+            if (IsMultiModeEngine && OtherEngineModeActive()) return true;
 
             // Use required ignitors
             var addedIgnitionPotential = 0f;
