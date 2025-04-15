@@ -160,7 +160,7 @@ namespace FuelMixer
         private bool UseIgnitorResource(IgnitorResource ignitorResource, ref float addedIgnitionPotential, ref Dictionary<int, float> resourcesToDrain)
         {
             double resourceAmount = 0f;
-            int resourceId = PartResourceLibrary.Instance.GetDefinition(ignitorResource.Name).id;
+            int resourceId = PartResourceLibrary.Instance.GetDefinition(ignitorResource.ResourceName).id;
             part?.GetConnectedResourceTotals(resourceId, out resourceAmount, out double resourceMaxAmount);
 
             var requiredResourceAmount = ignitorResource.Amount;
@@ -186,7 +186,7 @@ namespace FuelMixer
                 if (!success)
                 {
                     // Required ignitor not satisfied
-                    message = "Ignition failed — Not enough " + ignitorResource.Name;
+                    message = "Ignition failed — Not enough " + ignitorResource.ResourceName;
                     return false;
                 }
             }
@@ -212,7 +212,7 @@ namespace FuelMixer
                     if (ignitorResource.AlwaysRequired) continue;
 
                     bool success = UseIgnitorResource(ignitorResource, ref ignitionPotential, ref resourcesToDrain);
-                    if (!success) missingResources.Add(ignitorResource.Name);
+                    if (!success) missingResources.Add(ignitorResource.ResourceName);
 
                     if (ignitionPotential > ignitionThreshold) break;
                 }

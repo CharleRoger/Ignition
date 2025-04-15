@@ -7,7 +7,7 @@ namespace FuelMixer
     public class IgnitorResource : IConfigNode
     {
         [SerializeField]
-        public string Name = null;
+        public string ResourceName = null;
         [SerializeField]
         public float Amount = 0;
         [SerializeField]
@@ -19,7 +19,7 @@ namespace FuelMixer
 
         public void Load(ConfigNode node)
         {
-            Name = node.GetValue("name");
+            ResourceName = node.GetValue("name");
             if (node.HasValue("Amount")) Amount = Mathf.Max(0.0f, float.Parse(node.GetValue("Amount")));
             if (node.HasValue("ScaledAmount")) ScaledAmount = Mathf.Max(0.0f, float.Parse(node.GetValue("ScaledAmount")));
             if (node.HasValue("AddedIgnitionPotential")) AddedIgnitionPotential = Mathf.Max(0.0f, float.Parse(node.GetValue("AddedIgnitionPotential")));
@@ -28,7 +28,7 @@ namespace FuelMixer
 
         public void Save(ConfigNode node)
         {
-            node.AddValue("name", Name);
+            node.AddValue("name", ResourceName);
             node.AddValue("Amount", Mathf.Max(0.0f, Amount));
             node.AddValue("ScaledAmount", Mathf.Max(0.0f, ScaledAmount));
             node.AddValue("AddedIgnitionPotential", Mathf.Max(0.0f, AddedIgnitionPotential));
@@ -37,7 +37,7 @@ namespace FuelMixer
 
         public override string ToString()
         {
-            var str = Name + ':' + Amount.ToString("F3") + '/' + ScaledAmount.ToString("F3") + '/' + AddedIgnitionPotential.ToString("F3") + '/' + AlwaysRequired.ToString();
+            var str = ResourceName + ':' + Amount.ToString("F3") + '/' + ScaledAmount.ToString("F3") + '/' + AddedIgnitionPotential.ToString("F3") + '/' + AlwaysRequired.ToString();
             return str;
         }
 
@@ -48,7 +48,7 @@ namespace FuelMixer
             var split = str.Split(':');
             var values = split[1].Split('/');
 
-            ignitorResource.Name = split[0];
+            ignitorResource.ResourceName = split[0];
             ignitorResource.Amount = float.Parse(values[0]);
             ignitorResource.ScaledAmount = float.Parse(values[1]);
             ignitorResource.AddedIgnitionPotential = float.Parse(values[2]);
