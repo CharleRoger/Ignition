@@ -9,15 +9,11 @@ namespace FuelMixer
     {
         private bool _isEngineMouseOver;
 
-        // In case we have multiple engines...
-        [KSPField(isPersistant = false)]
-        public int EngineIndex = 0;
+        [KSPField(isPersistant = true)]
+        public string engineID = "";
 
         bool MultiModeEngine = false;
-
-        // List of all engines. So we can pick the one we are corresponding to.
-        private List<EngineWrapper> _engines = new List<EngineWrapper>();
-        private EngineWrapper _engine = null;
+        private ModuleEngines EngineModule = null;
 
         private bool _ignited = false;
 
@@ -48,35 +44,30 @@ namespace FuelMixer
 
         public void Start()
         {
-            _engines.Clear();
-
             if (part is null || part.Modules is null) return;
 
             var engineModules = part.FindModulesImplementing<ModuleEngines>();
-
-            foreach (PartModule module in part.Modules)
+            if (engineModules.Count == 1) EngineModule = engineModules.First();
+            else
             {
-                if (module.moduleName == "ModuleEnginesFX") //find partmodule engine on the part
+                foreach (var engineModule in engineModules)
                 {
-                    _engines.Add(new EngineWrapper(module as ModuleEnginesFX));
+                    if (engineModule.engineID == engineID)
+                    {
+                        EngineModule = engineModule;
+                        break;
+                    }
                 }
-                if (module.moduleName == "ModuleEngines") //find partmodule engine on the part
-                {
-                    _engines.Add(new EngineWrapper(module as ModuleEngines));
-                }
-                if (module.moduleName == "MultiModeEngine") MultiModeEngine = true;
             }
+            if (EngineModule is null) return;
 
-            if (EngineIndex > _engines.Count - 1) return;
-
-            _engine = _engines[EngineIndex];
+            if (engineID == "") engineID = EngineModule.engineID;
 
             // Resources required for ignitor
             IgnitorResources.Clear();
             if (IgnitorResourcesString != "")
             {
-                var requiredResourceStrings = IgnitorResourcesString.Split(';');
-                foreach (var requiredResourceString in requiredResourceStrings) IgnitorResources.Add(IgnitorResource.FromString(requiredResourceString));
+                foreach (var requiredResourceString in IgnitorResourcesString.Split(';')) IgnitorResources.Add(IgnitorResource.FromString(requiredResourceString));
             }
 
             // Propellant configs for ignition potential computation
@@ -99,27 +90,11 @@ namespace FuelMixer
             if (HighLogic.LoadedSceneIsEditor) _isEngineMouseOver = false;
         }
 
-        int CurrentActiveMode()
+        private float GetEngineMassRate()
         {
-            int cnt = 0;
-            foreach (PartModule pm in part.Modules) //change from part to partmodules
-            {
-                if (pm.moduleName == "ModuleEngines") //find partmodule engine on the part
-                {
-                    ModuleEngines em = pm as ModuleEngines;
-                    cnt++;
-                    if (em.EngineIgnited)
-                        break;
-                }
-                if (pm.moduleName == "ModuleEnginesFX") //find partmodule engine on the part
-                {
-                    cnt++;
-                    ModuleEnginesFX emfx = pm as ModuleEnginesFX;
-                    if (emfx.EngineIgnited == true)
-                        break;
-                }
-            }
-            return cnt - 1;
+            float isp = EngineModule.atmosphereCurve.Curve.keys[0].value;
+            if (!EngineModule.useVelCurve) isp = EngineModule.atmosphereCurve.Curve.keys[1].value;
+            return 1000 * EngineModule.maxThrust / (EngineModule.g * isp);
         }
 
         void OnGUI()
@@ -134,7 +109,7 @@ namespace FuelMixer
                 for (int i = 0; i < IgnitorResources.Count; ++i)
                 {
                     IgnitorResource resource = IgnitorResources[i];
-                    resourceRequired += resource.Name + "(" + resource.GetAmount(_engine.MassRate).ToString("F1") + ")";
+                    resourceRequired += resource.Name + "(" + resource.GetAmount(GetEngineMassRate()).ToString("F1") + ")";
                     if (i != IgnitorResources.Count - 1) resourceRequired += ", ";
                     else resourceRequired += ".";
                 }
@@ -146,7 +121,7 @@ namespace FuelMixer
 
         private void FixedUpdate()
         {
-            if (!HighLogic.LoadedSceneIsFlight || _engine == null || !_engine.allowShutdown) return;
+            if (!HighLogic.LoadedSceneIsFlight || EngineModule is null || !EngineModule.allowShutdown) return;
 
             var oldIgnited = _ignited;
             DecideNewState();
@@ -162,24 +137,30 @@ namespace FuelMixer
                 AttemptIgnition();
             }
 
-            if (attemptIgnition && !_ignited && _engine.EngineIgnited)
+            if (attemptIgnition && !_ignited && EngineModule.EngineIgnited)
             {
-                _engine.BurstFlameoutGroups();
-                _engine.SetRunningGroupsActive(false);
-                foreach (BaseEvent baseEvent in _engine.Events)
+                if (EngineModule is ModuleEnginesFX engineModuleFX) engineModuleFX.part.Effects.Event(engineModuleFX.flameoutEffectName, engineModuleFX.transform.hierarchyCount);
+                else
+                {
+                    EngineModule.BurstFlameoutGroups();
+                    EngineModule.SetRunningGroupsActive(false);
+                }
+                
+                foreach (BaseEvent baseEvent in EngineModule.Events)
                 {
                     if (baseEvent.name.IndexOf("shutdown", StringComparison.CurrentCultureIgnoreCase) >= 0)
                     {
                         baseEvent.Invoke();
                     }
                 }
-                _engine.SetRunningGroupsActive(false);
+                EngineModule.SetRunningGroupsActive(false);
             }
         }
 
         private void DecideNewState()
         {
-            if ((_engine.requestedThrottle <= 0.0f && !MultiModeEngine) || _engine.flameout || (_engine.EngineIgnited == false && _engine.allowShutdown))
+            bool flameout = EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
+            if ((EngineModule.requestedThrottle <= 0.0f && !MultiModeEngine) || flameout || (EngineModule.EngineIgnited == false && EngineModule.allowShutdown))
             {
                 _ignited = false;
                 return;
@@ -188,47 +169,33 @@ namespace FuelMixer
             if (!_ignited)
             {
                 //When changing from not-ignited to ignited, we must ensure that the throttle is non-zero or locked (SRBs)
-                if (vessel.ctrlState.mainThrottle > 0.0f || _engine.throttleLocked) _ignited = true;
+                if (vessel.ctrlState.mainThrottle > 0.0f || EngineModule.throttleLocked) _ignited = true;
                 else _ignited = false;
             }
+        }
+
+        string CurrentActiveEngineID()
+        {
+            foreach (var engineModule in part.FindModulesImplementing<ModuleEngines>())
+            {
+                if (engineModule.EngineIgnited == true) return engineModule.engineID;
+            }
+            return null;
         }
 
         float oldEngineThrottle = 0;
         bool OtherEngineModeActive()
         {
-            string s;
-
-            // Check to see if any other engine mode is on
-            int cnt = 0;
-            foreach (PartModule pm in part.Modules) //change from part to partmodules
+            foreach (var engineModule in part.FindModulesImplementing<ModuleEngines>())
             {
-                if (pm.moduleName == "ModuleEngines") //find partmodule engine on the part
-                {
-                    if (cnt == EngineIndex)
-                        continue;
-                    cnt++;
-                    ModuleEngines em = pm as ModuleEngines;
+                if (engineModule.engineID == engineID) continue;
 
-                    bool deprived = em.CheckDeprived(.01, out s);
-                    if (em.EngineIgnited == true && !em.flameout && !deprived)
-                    {
-                        oldEngineThrottle = em.requestedThrottle;
-                        return true;
-                    }
-                }
-                if (pm.moduleName == "ModuleEnginesFX") //find partmodule engine on the part
+                bool deprived = engineModule.CheckDeprived(.01, out string propName);
+                bool flameout = EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
+                if (engineModule.EngineIgnited == true && !flameout && !deprived)
                 {
-                    if (cnt == EngineIndex)
-                        continue;
-                    cnt++;
-                    ModuleEnginesFX emfx = pm as ModuleEnginesFX;
-
-                    bool deprived = emfx.CheckDeprived(.01, out s);
-                    if (emfx.EngineIgnited == true && !emfx.flameout && !deprived)
-                    {
-                        oldEngineThrottle = emfx.requestedThrottle;
-                        return true;
-                    }
+                    oldEngineThrottle = engineModule.requestedThrottle;
+                    return true;
                 }
             }
             return false;
@@ -240,7 +207,7 @@ namespace FuelMixer
             int resourceId = PartResourceLibrary.Instance.GetDefinition(ignitorResource.Name).id;
             part?.GetConnectedResourceTotals(resourceId, out resourceAmount, out double resourceMaxAmount);
 
-            var requiredResourceAmount = ignitorResource.GetAmount(_engine.MassRate);
+            var requiredResourceAmount = ignitorResource.GetAmount(GetEngineMassRate());
             if (resourceAmount < requiredResourceAmount) return false;
 
             addedIgnitionPotential += ignitorResource.AddedIgnitionPotential;
@@ -250,67 +217,64 @@ namespace FuelMixer
 
         private void AttemptIgnition()
         {
-            var ignitionThreshold = 0.999; // A bit less than 1 to allow for precision issues
+            if (MultiModeEngine && OtherEngineModeActive() && CurrentActiveEngineID() != engineID) return;
 
-            var totalRatio = 0f;
-            foreach (var propellant in _engine.propellants) totalRatio += propellant.ratio;
-
-            if (!MultiModeEngine || (MultiModeEngine && !OtherEngineModeActive()) || CurrentActiveMode() == EngineIndex)
+            // Use required ignitors
+            var addedIgnitionPotential = 0f;
+            Dictionary<int, float> resourcesToDrain = new Dictionary<int, float>();
+            foreach (var ignitorResource in IgnitorResources)
             {
-                // Use required ignitors
-                var addedIgnitionPotential = 0f;
-                Dictionary<int, float> resourcesToDrain = new Dictionary<int, float>();
-                foreach (var ignitorResource in IgnitorResources)
+                if (!ignitorResource.AlwaysRequired) continue;
+
+                bool success = UseIgnitor(ignitorResource, ref addedIgnitionPotential, ref resourcesToDrain);
+                if (!success)
                 {
-                    if (!ignitorResource.AlwaysRequired) continue;
-
-                    bool success = UseIgnitor(ignitorResource, ref addedIgnitionPotential, ref resourcesToDrain);
-                    if (!success)
-                    {
-                        // Required ignitor not satisfied
-                        ScreenMessages.PostScreenMessage("Not enough " + ignitorResource.Name + " for ignitor", 3f, ScreenMessageStyle.UPPER_CENTER);
-                        _ignited = false;
-                        return;
-                    }
-                }
-
-                // Compute ignition potential of propellant combination
-                var ignitionPotential = 1f;
-                foreach (var propellant in _engine.propellants)
-                {
-                    if (!PropellantConfigs.ContainsKey(propellant.name)) continue;
-                    ignitionPotential *= Mathf.Pow(PropellantConfigs[propellant.name].IgnitionPotential, propellant.ratio / totalRatio);
-                }
-                ignitionPotential += addedIgnitionPotential;
-
-                // Use other ignitors if ignition is not yet achieved
-                var missingResources = new List<string>();
-                if (ignitionPotential < ignitionThreshold)
-                {
-                    foreach (var ignitorResource in IgnitorResources)
-                    {
-                        if (ignitorResource.AlwaysRequired) continue;
-
-                        bool success = UseIgnitor(ignitorResource, ref ignitionPotential, ref resourcesToDrain);
-                        if (!success) missingResources.Add(ignitorResource.Name);
-
-                        if (ignitionPotential > ignitionThreshold) break;
-                    }
-                }
-                if (ignitionPotential < ignitionThreshold)
-                {
-                    // Ignition failed
-                    if (missingResources.Count > 0) ScreenMessages.PostScreenMessage("Not enough " + missingResources.First() + " for ignitor", 3f, ScreenMessageStyle.UPPER_CENTER);
-                    else ScreenMessages.PostScreenMessage("Failed to achieve ignition", 3f, ScreenMessageStyle.UPPER_CENTER);
+                    // Required ignitor not satisfied
+                    ScreenMessages.PostScreenMessage("Not enough " + ignitorResource.Name + " for ignitor", 3f, ScreenMessageStyle.UPPER_CENTER);
                     _ignited = false;
                     return;
                 }
+            }
 
-                // Ignition achieved
-                foreach (var resourceToDrain in resourcesToDrain)
+            // Compute ignition potential of propellant combination
+            var totalRatio = 0f;
+            foreach (var propellant in EngineModule.propellants) totalRatio += propellant.ratio;
+            var ignitionPotential = 1f;
+            foreach (var propellant in EngineModule.propellants)
+            {
+                if (!PropellantConfigs.ContainsKey(propellant.name)) continue;
+                ignitionPotential *= Mathf.Pow(PropellantConfigs[propellant.name].IgnitionPotential, propellant.ratio / totalRatio);
+            }
+            ignitionPotential += addedIgnitionPotential;
+
+            // Use other ignitors if ignition is not yet achieved
+            var ignitionThreshold = 0.999; // A bit less than 1 to allow for precision issues
+            var missingResources = new List<string>();
+            if (ignitionPotential < ignitionThreshold)
+            {
+                foreach (var ignitorResource in IgnitorResources)
                 {
-                    part?.RequestResource(resourceToDrain.Key, resourceToDrain.Value, ResourceFlowMode.STAGE_PRIORITY_FLOW);
+                    if (ignitorResource.AlwaysRequired) continue;
+
+                    bool success = UseIgnitor(ignitorResource, ref ignitionPotential, ref resourcesToDrain);
+                    if (!success) missingResources.Add(ignitorResource.Name);
+
+                    if (ignitionPotential > ignitionThreshold) break;
                 }
+            }
+            if (ignitionPotential < ignitionThreshold)
+            {
+                // Ignition failed
+                if (missingResources.Count > 0) ScreenMessages.PostScreenMessage("Not enough " + missingResources.First() + " for ignitor", 3f, ScreenMessageStyle.UPPER_CENTER);
+                else ScreenMessages.PostScreenMessage("Failed to achieve ignition", 3f, ScreenMessageStyle.UPPER_CENTER);
+                _ignited = false;
+                return;
+            }
+
+            // Ignition achieved
+            foreach (var resourceToDrain in resourcesToDrain)
+            {
+                part?.RequestResource(resourceToDrain.Key, resourceToDrain.Value, ResourceFlowMode.STAGE_PRIORITY_FLOW);
             }
         }
     }
