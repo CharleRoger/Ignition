@@ -7,8 +7,6 @@ namespace FuelMixer
 {
     public class ModuleIgnitor : PartModule
     {
-        private bool _isEngineMouseOver;
-
         [KSPField(isPersistant = true)]
         public string engineID = "";
 
@@ -80,43 +78,11 @@ namespace FuelMixer
             }
         }
 
-        public void OnMouseEnter()
-        {
-            if (HighLogic.LoadedSceneIsEditor) _isEngineMouseOver = true;
-        }
-
-        public void OnMouseExit()
-        {
-            if (HighLogic.LoadedSceneIsEditor) _isEngineMouseOver = false;
-        }
-
         private float GetEngineMassRate()
         {
             float isp = EngineModule.atmosphereCurve.Curve.keys[0].value;
             if (!EngineModule.useVelCurve) isp = EngineModule.atmosphereCurve.Curve.keys[1].value;
             return 1000 * EngineModule.maxThrust / (EngineModule.g * isp);
-        }
-
-        void OnGUI()
-        {
-            if (_isEngineMouseOver == false) return;
-
-            string resourceRequired = "No resource requirement for ignition.";
-
-            if (IgnitorResources.Count > 0)
-            {
-                resourceRequired = "Ignition requires: ";
-                for (int i = 0; i < IgnitorResources.Count; ++i)
-                {
-                    IgnitorResource resource = IgnitorResources[i];
-                    resourceRequired += resource.Name + "(" + resource.GetAmount(GetEngineMassRate()).ToString("F1") + ")";
-                    if (i != IgnitorResources.Count - 1) resourceRequired += ", ";
-                    else resourceRequired += ".";
-                }
-            }
-
-            Vector2 screenCoords = Camera.main.WorldToScreenPoint(part.transform.position);
-            Rect ignitorInfoRect = new Rect(screenCoords.x - 100.0f, Screen.height - screenCoords.y - 10, 200.0f, 20.0f);
         }
 
         private void FixedUpdate()
