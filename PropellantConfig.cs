@@ -1,4 +1,4 @@
-﻿namespace FuelMixer
+﻿namespace Ignition
 {
     public class PropellantConfig : PropellantConfigBase
     {

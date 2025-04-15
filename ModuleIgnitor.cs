@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace FuelMixer
+namespace Ignition
 {
     public class ModuleIgnitor : PartModule
     {

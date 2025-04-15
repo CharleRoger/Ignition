@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace FuelMixer
+namespace Ignition
 {
-    public class ModuleFuelMixerPropellant : PartModule, IPartMassModifier, IPartCostModifier
+    public class ModuleIgnitionPropellant : PartModule, IPartMassModifier, IPartCostModifier
     {
         [KSPField(isPersistant = true)]
         public string moduleID;

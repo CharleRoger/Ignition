@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace FuelMixer
+namespace Ignition
 {
     public abstract class PropellantConfigBase
     {

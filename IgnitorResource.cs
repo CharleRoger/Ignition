@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace FuelMixer
+namespace Ignition
 {
     [Serializable]
     public class IgnitorResource : IConfigNode

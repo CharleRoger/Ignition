@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace FuelMixer
+namespace Ignition
 {
     public class PropellantCombinationConfig : PropellantConfigBase
     {

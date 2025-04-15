@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35004.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuelMixer", "FuelMixer.csproj", "{0A284B45-EC21-434C-8BD8-6078A0194305}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ignition", "Ignition.csproj", "{0A284B45-EC21-434C-8BD8-6078A0194305}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
