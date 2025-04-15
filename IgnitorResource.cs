@@ -10,20 +10,13 @@ namespace FuelMixer
         [SerializeField]
         public string Name = null;
         [SerializeField]
-        private float Amount = 0;
+        public float Amount = 0;
         [SerializeField]
-        private float ScaledAmount = 0;
+        public float ScaledAmount = 0;
         [SerializeField]
         public float AddedIgnitionPotential = 1;
         [SerializeField]
         public bool AlwaysRequired = false;
-
-        public float GetAmount(float massRate)
-        {
-            if (Amount != 0) return Amount;
-            if (ScaledAmount != 0) return ScaledAmount * massRate;
-            return 0;
-        }
 
         public void Load(ConfigNode node)
         {

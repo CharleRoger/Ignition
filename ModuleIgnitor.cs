@@ -65,7 +65,12 @@ namespace FuelMixer
             IgnitorResources.Clear();
             if (IgnitorResourcesString != "")
             {
-                foreach (var requiredResourceString in IgnitorResourcesString.Split(';')) IgnitorResources.Add(IgnitorResource.FromString(requiredResourceString));
+                foreach (var requiredResourceString in IgnitorResourcesString.Split(';'))
+                {
+                    var ignitorResource = IgnitorResource.FromString(requiredResourceString);
+                    if (ignitorResource.Amount == 0) ignitorResource.Amount = ignitorResource.ScaledAmount * GetEngineMassRate();
+                    IgnitorResources.Add(ignitorResource);
+                }
             }
 
             // Propellant configs for ignition potential computation
@@ -149,7 +154,6 @@ namespace FuelMixer
             return null;
         }
 
-        float oldEngineThrottle = 0;
         bool OtherEngineModeActive()
         {
             foreach (var engineModule in part.FindModulesImplementing<ModuleEngines>())
@@ -160,7 +164,6 @@ namespace FuelMixer
                 bool flameout = EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
                 if (engineModule.EngineIgnited == true && !flameout && !deprived)
                 {
-                    oldEngineThrottle = engineModule.requestedThrottle;
                     return true;
                 }
             }
@@ -173,7 +176,7 @@ namespace FuelMixer
             int resourceId = PartResourceLibrary.Instance.GetDefinition(ignitorResource.Name).id;
             part?.GetConnectedResourceTotals(resourceId, out resourceAmount, out double resourceMaxAmount);
 
-            var requiredResourceAmount = ignitorResource.GetAmount(GetEngineMassRate());
+            var requiredResourceAmount = ignitorResource.Amount;
             if (resourceAmount < requiredResourceAmount) return false;
 
             addedIgnitionPotential += ignitorResource.AddedIgnitionPotential;
