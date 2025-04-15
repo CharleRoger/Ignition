@@ -94,19 +94,13 @@ namespace FuelMixer
         {
             if (!HighLogic.LoadedSceneIsFlight || EngineModule is null || !EngineModule.allowShutdown) return;
 
-            var oldIgnited = _ignited;
-            DecideNewState();
+            bool shouldBeIgnited = ShouldBeIgnited() || OtherEngineModeActive();
 
-            bool attemptIgnition = !oldIgnited && _ignited;
-
-            if (OtherEngineModeActive())
-            {
-                _ignited = true;
-            }
-            else if (attemptIgnition)
+            if (!shouldBeIgnited) _ignited = false;
+            else if (!_ignited && shouldBeIgnited)
             {
                 string message = "";
-                AttemptIgnition(ref message);
+                _ignited = AttemptIgnition(ref message);
                 if (message != "") ScreenMessages.PostScreenMessage(message, 3f, ScreenMessageStyle.UPPER_CENTER);
 
                 if (EngineModule.EngineIgnited)
@@ -126,21 +120,14 @@ namespace FuelMixer
             }
         }
 
-        private void DecideNewState()
+        private bool ShouldBeIgnited()
         {
             bool flameout = EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
-            if ((EngineModule.requestedThrottle <= 0.0f && !MultiModeEngine) || flameout || (EngineModule.EngineIgnited == false && EngineModule.allowShutdown))
-            {
-                _ignited = false;
-                return;
-            }
+            if ((EngineModule.requestedThrottle <= 0.0f && !MultiModeEngine) || flameout || (EngineModule.EngineIgnited == false && EngineModule.allowShutdown)) return false;
 
-            if (!_ignited)
-            {
-                //When changing from not-ignited to ignited, we must ensure that the throttle is non-zero or locked (SRBs)
-                if (vessel.ctrlState.mainThrottle > 0.0f || EngineModule.throttleLocked) _ignited = true;
-                else _ignited = false;
-            }
+            if (!EngineModule.EngineIgnited) return vessel.ctrlState.mainThrottle > 0.0f || EngineModule.throttleLocked;
+
+            return EngineModule.EngineIgnited;
         }
 
         string CurrentActiveEngineID()
@@ -182,9 +169,9 @@ namespace FuelMixer
             return true;
         }
 
-        private void AttemptIgnition(ref string message)
+        private bool AttemptIgnition(ref string message)
         {
-            if (MultiModeEngine && OtherEngineModeActive() && CurrentActiveEngineID() != engineID) return;
+            if (MultiModeEngine && OtherEngineModeActive() && CurrentActiveEngineID() != engineID) return true;
 
             // Use required ignitors
             var addedIgnitionPotential = 0f;
@@ -198,8 +185,7 @@ namespace FuelMixer
                 {
                     // Required ignitor not satisfied
                     message = "Ignition failed — Not enough " + ignitorResource.Name;
-                    _ignited = false;
-                    return;
+                    return false;
                 }
             }
 
@@ -234,8 +220,7 @@ namespace FuelMixer
                 // Ignition failed
                 if (missingResources.Count > 0) message = "Ignition failed — Not enough " + missingResources.First();
                 else message = "Ignition failed — Ignitor was insufficient";
-                _ignited = false;
-                return;
+                return false;
             }
 
             // Ignition achieved
@@ -244,6 +229,7 @@ namespace FuelMixer
             {
                 part?.RequestResource(resourceToDrain.Key, resourceToDrain.Value, ResourceFlowMode.STAGE_PRIORITY_FLOW);
             }
+            return true;
         }
     }
 }
