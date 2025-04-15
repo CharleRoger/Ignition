@@ -130,10 +130,14 @@ namespace Ignition
             }
         }
 
+        private bool EngineFlameout()
+        {
+            return EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
+        }
+
         private bool ShouldBeIgnited()
         {
-            bool flameout = EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
-            if ((EngineModule.requestedThrottle <= 0.0f) || flameout || (EngineModule.EngineIgnited == false && EngineModule.allowShutdown)) return false;
+            if ((EngineModule.requestedThrottle <= 0.0f) || EngineFlameout() || (EngineModule.EngineIgnited == false && EngineModule.allowShutdown)) return false;
 
             if (!EngineModule.EngineIgnited) return vessel.ctrlState.mainThrottle > 0.0f || EngineModule.throttleLocked;
 
@@ -146,8 +150,8 @@ namespace Ignition
             {
                 if (engineModule.engineID == engineID) continue;
 
+                bool flameout = EngineFlameout();
                 bool deprived = engineModule.CheckDeprived(0.01, out string propName);
-                bool flameout = EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
                 if (engineModule.EngineIgnited == true && !flameout && !deprived)
                 {
                     return true;
