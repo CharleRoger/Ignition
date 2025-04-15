@@ -121,14 +121,6 @@ namespace FuelMixer
                         if (EngineModule is ModuleEnginesFX engineModuleFX) engineModuleFX.part.Effects.Event(engineModuleFX.flameoutEffectName, engineModuleFX.transform.hierarchyCount);
                         else EngineModule.BurstFlameoutGroups();
                         EngineModule.SetRunningGroupsActive(false);
-
-                        foreach (BaseEvent baseEvent in EngineModule.Events)
-                        {
-                            if (baseEvent.name.IndexOf("shutdown", StringComparison.CurrentCultureIgnoreCase) >= 0)
-                            {
-                                baseEvent.Invoke();
-                            }
-                        }
                     }
                 }
             }
