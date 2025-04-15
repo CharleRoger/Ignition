@@ -75,7 +75,7 @@ namespace Ignition
                     if (ignitorResource.Amount == 0 && ignitorResource.ScaledAmount > 0)
                     {
                         var unroundedAmount = ignitorResource.ScaledAmount * GetEngineMassRate();
-                        var powerOfTen = Mathf.Pow(10, Mathf.Floor(Mathf.Log10(unroundedAmount)) + 1);
+                        var powerOfTen = Mathf.Pow(10, Mathf.Floor(Mathf.Log10(unroundedAmount)));
                         ignitorResource.Amount = powerOfTen * Mathf.Round(unroundedAmount / powerOfTen);
                     }
                     IgnitorResources.Add(ignitorResource);
