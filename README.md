@@ -95,7 +95,11 @@ IgnitionPropellantCombinationConfig
 ```
 
 ### ModuleIgnitor
-`ModuleIgnitor` is used to add ignition constraints or provide ignition potential to an engine. It can be configured with any number of `IGNITOR_RESOURCE`s, with the following fields:
+`ModuleIgnitor` is used to add ignition constraints or provide ignition potential to an engine with the following fields:
+- `moduleID` = Unique id of this module.
+- `engineID` = Unique id of the targeted engine module. Must be specified for a part with multiple engine modules, can be omitted otherwise.
+
+It can be configured with any number of `IGNITOR_RESOURCE`s, with the following fields:
 - `name` = Name of the resource to use.
 - `Amount` = Absolute amount of resource to use.
 - `ScaledAmount` = Approximate amount of resource scaled to the max mass flow rate of the engine, used if `Amount` is not defined.
