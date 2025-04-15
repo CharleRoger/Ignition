@@ -13,15 +13,15 @@ namespace Ignition
         [KSPField(isPersistant = true)]
         public string engineID = "";
 
-        bool IsMultiModeEngine = false;
+        private bool IsMultiModeEngine = false;
         private ModuleEngines EngineModule = null;
 
         private bool _ignited = false;
 
         [KSPField(isPersistant = true)]
         public string IgnitorResourcesString = null;
-        public List<IgnitorResource> IgnitorResources = new List<IgnitorResource>();
-        public Dictionary<string, PropellantConfig> PropellantConfigs = new Dictionary<string, PropellantConfig>();
+        private List<IgnitorResource> IgnitorResources = new List<IgnitorResource>();
+        private Dictionary<string, PropellantConfig> PropellantConfigs = new Dictionary<string, PropellantConfig>();
 
         public override void OnLoad(ConfigNode node)
         {
