@@ -8,6 +8,9 @@ namespace Ignition
     public class ModuleIgnitor : PartModule
     {
         [KSPField(isPersistant = true)]
+        public string moduleID;
+
+        [KSPField(isPersistant = true)]
         public string engineID = "";
 
         bool IsMultiModeEngine = false;
