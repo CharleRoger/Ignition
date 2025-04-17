@@ -32,7 +32,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="IgnitorResource.cs" />
+    <Compile Include="ModuleIgnitionController.cs" />
+    <Compile Include="ModuleIgnitionEngineController.cs" />
     <Compile Include="ModuleIgnitionPropellant.cs" />
+    <Compile Include="ModuleIgnitionRCSController.cs" />
+    <Compile Include="ModuleIgnitionTankController.cs" />
+    <Compile Include="ModuleIgnitionThrusterController.cs" />
     <Compile Include="ModuleIgnitor.cs" />
     <Compile Include="PropellantCombinationConfig.cs" />
     <Compile Include="PropellantConfigBase.cs" />
