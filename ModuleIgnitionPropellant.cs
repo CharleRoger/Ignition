@@ -16,12 +16,6 @@ namespace Ignition
         [KSPField(isPersistant = true)]
         public string resourceNameOriginal = null;
 
-        public string GetResourceName(bool useOriginal)
-        {
-            if (useOriginal) return resourceNameOriginal;
-            return resourceName;
-        }
-
         [KSPField(isPersistant = true)]
         public float ratio = 0;
 
@@ -58,6 +52,28 @@ namespace Ignition
                 controllerModule.UpdatePropellantConfigs();
                 controllerModule.ApplyPropellantConfig();
             }
+        }
+    }
+
+    public class ModuleIgnitionPropellantWrapper
+    {
+        private ModuleIgnitionPropellant Module;
+        private bool UseOriginalResourceNames;
+        public string moduleID => Module.moduleID;
+        public float ratio => Module.ratio;
+        public bool drawStackGauge => Module.drawStackGauge;
+        public bool ignoreForIsp => Module.ignoreForIsp;
+
+        public ModuleIgnitionPropellantWrapper(ModuleIgnitionPropellant module, bool useOriginalResourceNames)
+        {
+            Module = module;
+            UseOriginalResourceNames = useOriginalResourceNames;
+        }
+
+        public string GetResourceName()
+        {
+            if (UseOriginalResourceNames) return Module.resourceNameOriginal;
+            return Module.resourceName;
         }
     }
 }
