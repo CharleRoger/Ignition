@@ -44,21 +44,16 @@ namespace Ignition
         private void InitialiseInfoStrings()
         {
             bool isActive = !ModuleIsNull();
-            string groupName = GetGroupName();
-
-            if (groupName == "") groupName = "Thruster";
-
             Fields["ThrustString"].guiActiveEditor = isActive;
             Fields["IspString"].guiActiveEditor = isActive;
-
             Fields["ThrustString"].guiActive = isActive;
             Fields["IspString"].guiActive = isActive;
 
             if (!isActive) return;
 
+            string groupName = GetGroupName();
             Fields["ThrustString"].group.name = groupName;
             Fields["IspString"].group.name = groupName;
-
             Fields["ThrustString"].group.displayName = groupName;
             Fields["IspString"].group.displayName = groupName;
         }
@@ -113,6 +108,12 @@ namespace Ignition
         public override void ApplyPropellantConfig()
         {
             ComputeNewStats();
+
+            if (ModuleIsNull()) return;
+            if (PropellantConfigCurrent is null) return;
+            if (PropellantConfigCurrent.Propellants.Count == 0) return;
+            if (MaxThrustCurrent == -1) return;
+
             ApplyPropellantCombinationToModule();
             SetInfoStrings();
         }

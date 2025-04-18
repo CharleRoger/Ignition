@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Ignition
 {
     [Serializable]
-    public class IgnitorResource : IConfigNode
+    public class IgnitionResource : IConfigNode
     {
         [SerializeField]
         public string ResourceName = null;
@@ -41,20 +41,20 @@ namespace Ignition
             return str;
         }
 
-        public static IgnitorResource FromString(string str)
+        public static IgnitionResource FromString(string str)
         {
-            IgnitorResource ignitorResource = new IgnitorResource();
+            IgnitionResource ignitionResource = new IgnitionResource();
 
             var split = str.Split(':');
             var values = split[1].Split('/');
 
-            ignitorResource.ResourceName = split[0];
-            ignitorResource.Amount = float.Parse(values[0]);
-            ignitorResource.ScaledAmount = float.Parse(values[1]);
-            ignitorResource.AddedIgnitionPotential = float.Parse(values[2]);
-            ignitorResource.AlwaysRequired = bool.Parse(values[3]);
+            ignitionResource.ResourceName = split[0];
+            ignitionResource.Amount = float.Parse(values[0]);
+            ignitionResource.ScaledAmount = float.Parse(values[1]);
+            ignitionResource.AddedIgnitionPotential = float.Parse(values[2]);
+            ignitionResource.AlwaysRequired = bool.Parse(values[3]);
 
-            return ignitorResource;
+            return ignitionResource;
         }
     }
 }
