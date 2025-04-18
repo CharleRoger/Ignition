@@ -45,7 +45,7 @@ namespace Ignition
 
         [KSPField(guiName = "<b>Ignitor</b>")]
         [UI_Label(scene = UI_Scene.All)]
-        public string IgnitionResourceDisplayString = "";
+        public string IgnitionResourcesDisplayString = "";
 
         public override void OnLoad(ConfigNode node)
         {
@@ -69,29 +69,12 @@ namespace Ignition
 
         public void Start()
         {
-            if (part is null || part.Modules is null) return;
-
-            // Engine modules
-            var engineModules = part.FindModulesImplementing<ModuleEngines>();
-            if (engineModules.Count == 1) EngineModule = engineModules.First();
-            else
-            {
-                foreach (var engineModule in engineModules)
-                {
-                    if (engineModule.engineID == engineID)
-                    {
-                        EngineModule = engineModule;
-                        break;
-                    }
-                }
-            }
-            if (EngineModule is null) return;
             if (engineID == "") engineID = EngineModule.engineID;
-            IsMultiModeEngine = part.FindModulesImplementing<MultiModeEngine>().Count > 0;
+            IsMultiModeEngine = part.HasModuleImplementing<MultiModeEngine>();
 
             // Resources used for ignition
             IgnitionResources.Clear();
-            IgnitionResourceDisplayString = "";
+            IgnitionResourcesDisplayString = "";
             if (IgnitionResourcesString != "")
             {
                 foreach (var requiredResourceString in IgnitionResourcesString.Split(';'))
@@ -102,17 +85,17 @@ namespace Ignition
                         var unroundedAmount = ignitionResource.ScaledAmount * GetEngineMassRate();
                         var powerOfTen = Mathf.Pow(10, Mathf.Floor(Mathf.Log10(unroundedAmount)));
                         ignitionResource.Amount = powerOfTen * Mathf.Round(unroundedAmount / powerOfTen);
-                        IgnitionResourceDisplayString += "\n  " + ignitionResource.Amount + " " + ignitionResource.ResourceName;
-                        if (ignitionResource.AlwaysRequired) IgnitionResourceDisplayString += " (always consumed)";
-                        else IgnitionResourceDisplayString += " (consumed if necessary)";
+                        IgnitionResourcesDisplayString += "\n  " + ignitionResource.Amount + " " + ignitionResource.ResourceName;
+                        if (ignitionResource.AlwaysRequired) IgnitionResourcesDisplayString += " (always consumed)";
+                        else IgnitionResourcesDisplayString += " (consumed if necessary)";
                     }
                     IgnitionResources.Add(ignitionResource);
                 }
             }
 
-            var groupName = engineID == "" ? "Engine" : engineID;
-            Fields["IgnitionDisplayString"].group.name = groupName;
-            Fields["IgnitionDisplayString"].group.displayName = groupName;
+            var groupName = GetGroupName();
+            Fields["IgnitionResourcesDisplayString"].group.name = groupName;
+            Fields["IgnitionResourcesDisplayString"].group.displayName = groupName;
         }
 
         private Dictionary<string, PropellantConfig> GetPropellantConfigs()
