@@ -183,7 +183,7 @@ MODULE
 }
 ```
 
-This design allows for flexibility in the control of the tank volume and resource via ModuleManager patches and switches, for example B9PartSwitch could be used to change the fuel like so:
+This design allows for flexibility in the control of the tank volume and propellant combination via ModuleManager patches and switches, for example B9PartSwitch could be used to change the fuel like so:
 ```
 MODULE
 {
