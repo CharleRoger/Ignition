@@ -1,7 +1,5 @@
 # Ignition!
-Ignition is a plugin for Kerbal Space Program which provides a simple framework for requiring engine ignitor resources and maintaining consistent propellant mixtures across fuel tanks, engines and RCS thrusters. This plugin was developed specifically for the mod [Chemical Propulsion](https://github.com/CharleRoger/ChemicalPropulsion), but is designed in a generic way and may find uses elsewhere. The engine ignitor logic was based on the mod EngineIgnitor, so many thanks to HoneyFox, Riocrokite, DennyTX and linuxgurugamer for their work on that plugin!
-
-This is an experimental plugin still very much in development, use at your own risk!
+Ignition is a plugin for Kerbal Space Program which provides a simple framework for maintaining consistent propellant mixtures across fuel tanks, engines and RCS thrusters, as well as providing a basic simulation of the use of resources for ignition. This plugin was developed specifically for the mod [Chemical Propulsion](https://github.com/CharleRoger/ChemicalPropulsion), but is designed in a generic way and may find uses elsewhere. The engine ignitor logic was loosely based on the mod EngineIgnitor, so many thanks to HoneyFox, Riocrokite, DennyTX and linuxgurugamer for their work on that plugin!
 
 ## Features
 ### Supported
@@ -12,8 +10,7 @@ This is an experimental plugin still very much in development, use at your own r
 - Bipropellant fuel tanks, engines and RCS thrusters
 - Jet engines
 ### Planned
-- Tripropellant+ fuel tanks, engines and RCS thrusters
-- Relevant stats displayed in the PAW
+- Tripropellants and more
 
 ## Usage
 ### IgnitionPropellantConfig
