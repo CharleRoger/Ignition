@@ -156,7 +156,7 @@ Controls propellant combinations and ignition simulation of a `ModuleEngines` wi
 - `drawStackGauge`: Whether this propellant should be used for the volume gauge on the staging panel.
 - `ignoreForIsp`: Whether this propellant should be ignored in thrust and isp computations, e.g. for the IntakeAir above.
 
-A propellant module can be used by any number of controller modules. For example, with the propellant configs defined above, the following modules added to the LFB KR-1x2 "Twin-Boar" would convert the engine to run on 3 Kerosene : 5 LqdOxygen and change the in-built tanks to contain a total volume of 6,400 units (32,000 litres) of propellant split into 12,000 Kerosene and 20,000 LqdOxygen:
+A propellant module can be used by any number of controller modules. For example, with the propellant configs defined above, the following modules added to the LFB KR-1x2 "Twin-Boar" would convert the engine to run on 3 Kerosene : 5 LqdOxygen and change the in-built tanks to contain a total volume of 32,000 litres of propellant split into 12,000 Kerosene and 20,000 LqdOxygen:
 ```
 MODULE
 {
