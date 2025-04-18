@@ -174,7 +174,7 @@ namespace Ignition
 
         private void FixedUpdate()
         {
-            if (!HighLogic.LoadedSceneIsFlight || ModuleEngines is null || !ModuleEngines.allowShutdown) return;
+            if (!HighLogic.LoadedSceneIsFlight || ModuleEngines is null) return;
 
             bool shouldBeIgnited = ShouldBeIgnited() || OtherEngineModeActive();
 
@@ -192,7 +192,7 @@ namespace Ignition
                         if (ModuleEngines is ModuleEnginesFX ModuleEnginesFX) ModuleEnginesFX.part.Effects.Event(ModuleEnginesFX.engageEffectName, ModuleEnginesFX.transform.hierarchyCount);
                         else ModuleEngines.PlayEngageFX();
                     }
-                    else
+                    else if (ModuleEngines.allowShutdown)
                     {
                         if (ModuleEngines is ModuleEnginesFX ModuleEnginesFX) ModuleEnginesFX.part.Effects.Event(ModuleEnginesFX.flameoutEffectName, ModuleEnginesFX.transform.hierarchyCount);
                         else ModuleEngines.BurstFlameoutGroups();
