@@ -73,7 +73,7 @@ namespace Ignition
 
         protected override string GetGroupName()
         {
-            return engineID != "" ? engineID : "Engine";
+            return IsMultiModeEngine ? "Engine mode \"" + engineID + " \"" : "Engine";
         }
 
         protected override void InitialiseData()
