@@ -31,9 +31,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="IgnitorResource.cs" />
+    <Compile Include="IgnitionResource.cs" />
+    <Compile Include="ModuleIgnitionController.cs" />
+    <Compile Include="ModuleIgnitionEngineController.cs" />
     <Compile Include="ModuleIgnitionPropellant.cs" />
-    <Compile Include="ModuleIgnitor.cs" />
+    <Compile Include="ModuleIgnitionRCSController.cs" />
+    <Compile Include="ModuleIgnitionTankController.cs" />
+    <Compile Include="ModuleIgnitionThrusterController.cs" />
     <Compile Include="PropellantCombinationConfig.cs" />
     <Compile Include="PropellantConfigBase.cs" />
     <Compile Include="PropellantConfig.cs" />

@@ -94,12 +94,16 @@ IgnitionPropellantCombinationConfig
 }
 ```
 
-### ModuleIgnitor
-`ModuleIgnitor` is used to add ignition constraints or provide ignition potential to an engine with the following fields:
+### Controller modules
+Controller modules are used to modify engine modules, RCS modules, and resources on a part. Each type of controller module can be configured with the following fields:
 - `moduleID` = Unique id of this module.
+- `propellantModuleID` = Unique id of a `ModuleIgnitionPropellant` used by this controller module (see below). Any number of `propellantModuleID` fields is allowed.
+
+#### ModuleIgnitionEngineController
+Controls propellant combinations and ignition simulation for a `ModuleEngines` with the following fields:
 - `engineID` = Unique id of the targeted engine module. Must be specified for a part with multiple engine modules, can be omitted otherwise.
 
-It can be configured with any number of `IGNITOR_RESOURCE`s, with the following fields:
+The engine controller can be configured with any number of `IGNITION_RESOURCE`s, with the following fields:
 - `name` = Name of the resource to use.
 - `Amount` = Absolute amount of resource to use.
 - `ScaledAmount` = Approximate amount of resource scaled to the max mass flow rate of the engine, used if `Amount` is not defined.
@@ -110,8 +114,8 @@ In the `Hydrazine`+`LqdOxygen` case above, the following ignitor would provide e
 ```
 MODULE
 {
-    name = ModuleIgnitor
-    IGNITOR_RESOURCE
+    name = ModuleIgnitionEngineController
+    IGNITION_RESOURCE
     {
         name = ElectricCharge
         ScaledAmount = 0.1
@@ -120,12 +124,12 @@ MODULE
 }
 ```
 
-In a simplified case using a traditional engine without Ignition configured propellants, a required ignitor can be added like so:
+In a simplified case using a traditional engine without Ignition-configured propellants, a required ignitor can be added like so:
 ```
 MODULE
 {
-    name = ModuleIgnitor
-    IGNITOR_RESOURCE
+    name = ModuleIgnitionEngineController
+    IGNITION_RESOURCE
     {
         name = ElectricCharge
         Amount = 10
@@ -134,35 +138,51 @@ MODULE
 }
 ```
 
+#### ModuleIgnitionRCSController
+Controls propellant combinations for a `ModuleRCS` with the following fields:
+- `moduleID` = Unique id of this module.
+
+RCS controllers cannot be configured with an ignitor resource.
+
+#### ModuleIgnitionTankController
+Controls propellant combinations and ignition simulation of a `ModuleEngines` with the following fields:
+- `moduleID` = Unique id of this module.
+- `volume` = Total volume for propellant storage in liters **NOT** stock KSP units of five-liters.
+- `addedMass` = Mass added to the part, not counting any resources.
+- `addedCost` = Cost added to the part, not counting any resources.
+
 ### ModuleIgnitionPropellant
-`ModuleIgnitionPropellant` is used to inject propellants into an engine module and take advantage of all of Ignition's automatic performance computation. It has the following fields:
+`ModuleIgnitionPropellant` is used to inject propellants into a controller module and take advantage of all of Ignition's automatic performance computation. It has the following fields:
 - `moduleID`: Optional arbitrary string identifier.
 - `resourceName`: Name of the resource to use, used to look up the corresponding `IgnitionPropellantConfig` or `IgnitionPropellantCombinationConfig` where applicable.
-- `removeResource`: Name of a resource whose `RESOURCE` node will be removed from the part, for replacing existing tanks.
 - `ratio`: Fixed ratio to override auto-computed mixture ratios. Ratio should be specified on either all the propellants or none of them. Useful for e.g. jet engines with a switchable fuel but a fixed fuel:IntakeAir ratio.
+- `drawStackGauge`: Whether this propellant should be used for the volume gauge on the staging panel.
 - `ignoreForIsp`: Whether this propellant should be ignored in thrust and isp computations, e.g. for the IntakeAir above.
-- `addedVolume`: Volume added to the total volume considered by the set of all active `ModuleIgnitionPropellant`s.
-- `addedMass`: Mass added to the part.
-- `addedCost`: Cost added to the part.
-- `engineID`: The `engineID` of a `ModuleEngines*` to act upon. If unspecified, the module will target the first `ModuleEngines*` it finds.
 
-All instances of this module work together and act on stored resources, engine modules and RCS modules simultaneously.
-
-For example, with the example propellant configs defined above, the following modules added to the LFB KR-1x2 "Twin-Boar" would convert the engine to run on 3 Kerosene : 5 LqdOxygen and change the in-built tanks to contain a total volume of 6,400 units (32,000 litres) of propellant split into 12,000 Kerosene and 20,000 LqdOxygen:
+A propellant module can be used by any number of controller modules. For example, with the propellant configs defined above, the following modules added to the LFB KR-1x2 "Twin-Boar" would convert the engine to run on 3 Kerosene : 5 LqdOxygen and change the in-built tanks to contain a total volume of 6,400 units (32,000 litres) of propellant split into 12,000 Kerosene and 20,000 LqdOxygen:
 ```
 MODULE
 {
 	name = ModuleIgnitionPropellant
 	moduleID = fuel
 	resourceName = Kerosene
-	addedVolume = 2880
 }
 MODULE
 {
 	name = ModuleIgnitionPropellant
 	moduleID = oxidizer
 	resourceName = LqdOxygen
-	addedVolume = 3520
+}
+MODULE
+{
+	name = ModuleIgnitionEngineController
+	propellantModuleID = fuel
+	propellantModuleID = oxidizer
+}
+MODULE
+{
+	name = ModuleIgnitionTankController
+	volume = 32000
 }
 ```
 
