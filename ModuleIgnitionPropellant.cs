@@ -1,4 +1,6 @@
-﻿namespace Ignition
+﻿using System.Collections.Generic;
+
+namespace Ignition
 {
     public class ModuleIgnitionPropellant : PartModule
     {
@@ -38,15 +40,23 @@
             if (resourceNameOriginal is null) resourceNameOriginal = resourceName;
             if (resourceNamePrevious is null) resourceNamePrevious = resourceName;
 
-            resourceNamePrevious = resourceName;
-
+            var connectedControllerModules = new List<ModuleIgnitionController>();
             foreach (var controllerModule in part.FindModulesImplementing<ModuleIgnitionController>())
             {
-                if (controllerModule.IsConnectedToPropellantModule(moduleID))
+                if (controllerModule.IsConnectedToPropellantModule(moduleID)) connectedControllerModules.Add(controllerModule);
+                if (controllerModule is ModuleIgnitionTankController)
                 {
-                    controllerModule.UpdatePropellantConfigs();
-                    controllerModule.ApplyPropellantConfig();
+                    if (resourceName != resourceNameOriginal) part.Resources.Remove(resourceNameOriginal);
+                    if (resourceName != resourceNamePrevious) part.Resources.Remove(resourceNamePrevious);
                 }
+            }
+
+            resourceNamePrevious = resourceName;
+
+            foreach (var controllerModule in connectedControllerModules)
+            {
+                controllerModule.UpdatePropellantConfigs();
+                controllerModule.ApplyPropellantConfig();
             }
         }
     }

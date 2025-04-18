@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Ignition
 {
@@ -31,15 +26,13 @@ namespace Ignition
         public float GetModuleCost(float baseCost, ModifierStagingSituation situation) => currentAddedCost;
         public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.FIXED;
 
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+        }
+
         public override void OnStart(StartState state)
         {
-            foreach (var propellantModule in GetConnectedPropellantModules(false, false))
-            {
-                part.Resources.Remove(propellantModule.resourceName);
-                part.Resources.Remove(propellantModule.resourceNameOriginal);
-                part.Resources.Remove(propellantModule.resourceNamePrevious);
-            }
-
             ApplyPropellantConfig();
         }
 
