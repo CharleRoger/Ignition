@@ -66,12 +66,23 @@ namespace Ignition
             }
         }
 
-        public void Start()
+        protected override bool ModuleIsNull()
         {
+            return ModuleEngines is null;
+        }
+
+        protected override string GetGroupName()
+        {
+            return engineID != "" ? engineID : "Engine";
+        }
+
+        protected override void InitialiseData()
+        {
+            if (ModuleIsNull()) return;
+
             if (engineID == "") engineID = ModuleEngines.engineID;
             IsMultiModeEngine = part.HasModuleImplementing<MultiModeEngine>();
 
-            // Resources used for ignition
             IgnitionResources.Clear();
             IgnitionResourcesDisplayString = "";
             if (IgnitionResourcesString != "")
@@ -92,42 +103,25 @@ namespace Ignition
                 }
             }
 
-            var groupName = GetGroupName();
-            Fields["IgnitionResourcesDisplayString"].group.name = groupName;
-            Fields["IgnitionResourcesDisplayString"].group.displayName = groupName;
-        }
-
-        private Dictionary<string, PropellantConfig> GetPropellantConfigs()
-        {
-            var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
-            var propellantConfigs = new Dictionary<string, PropellantConfig>();
-            foreach (var propellantConfigNode in propellantConfigNodes)
-            {
-                var propellantConfig = new PropellantConfig(propellantConfigNode);
-                propellantConfigs[propellantConfig.ResourceName] = propellantConfig;
-            }
-            return propellantConfigs;
-        }
-
-        protected override bool ModuleIsNull()
-        {
-            return ModuleEngines is null;
-        }
-
-        protected override string GetGroupName()
-        {
-            return engineID != "" ? engineID : "Engine";
-        }
-
-        protected override void InitialiseStats()
-        {
-            if (ModuleIsNull()) return;
             if (ModuleEngines.atmosphereCurve.Curve.keys.Length == 0) return;
             if (MaxThrustOriginal != -1) return;
 
             MaxThrustOriginal = ModuleEngines.maxThrust;
             IspVacuumOriginal = ModuleEngines.atmosphereCurve.Curve.keys[0].value;
             if (!ModuleEngines.useVelCurve) IspSeaLevelOriginal = ModuleEngines.atmosphereCurve.Curve.keys[1].value;
+        }
+
+        protected override void InitialiseInfoStrings()
+        {
+            base.InitialiseInfoStrings();
+
+            var groupName = GetGroupName();
+            Fields["IgnitionResourcesDisplayString"].group.name = groupName;
+            Fields["IgnitionResourcesDisplayString"].group.displayName = groupName;
+
+            var isActive = !ModuleIsNull() && IgnitionResources.Count != 0;
+            Fields["IgnitionResourcesDisplayString"].guiActiveEditor = isActive;
+            Fields["IgnitionResourcesDisplayString"].guiActive = isActive;
         }
 
         protected override void ApplyPropellantCombinationToModule()
@@ -259,11 +253,18 @@ namespace Ignition
                 }
             }
 
+            var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
+            var propellantConfigs = new Dictionary<string, PropellantConfig>();
+            foreach (var propellantConfigNode in propellantConfigNodes)
+            {
+                var propellantConfig = new PropellantConfig(propellantConfigNode);
+                propellantConfigs[propellantConfig.ResourceName] = propellantConfig;
+            }
+
             // Compute ignition potential of propellant combination
             var totalRatio = 0f;
             foreach (var propellant in ModuleEngines.propellants) totalRatio += propellant.ratio;
             var ignitionPotential = 1f;
-            var propellantConfigs = GetPropellantConfigs();
             foreach (var propellant in ModuleEngines.propellants)
             {
                 if (!propellantConfigs.ContainsKey(propellant.name)) continue;

@@ -28,7 +28,7 @@ namespace Ignition
             return "RCS";
         }
 
-        protected override void InitialiseStats()
+        protected override void InitialiseData()
         {
             if (ModuleIsNull()) return;
             if (ModuleRCS.atmosphereCurve.Curve.keys.Length == 0) return;

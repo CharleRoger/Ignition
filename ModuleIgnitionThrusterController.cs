@@ -36,12 +36,12 @@ namespace Ignition
 
         protected abstract bool ModuleIsNull();
         protected abstract string GetGroupName();
-        protected abstract void InitialiseStats();
+        protected abstract void InitialiseData();
         protected abstract void ApplyPropellantCombinationToModule();
         protected abstract float GetG();
         protected abstract bool UseVelCurve();
 
-        private void InitialiseInfoStrings()
+        protected virtual void InitialiseInfoStrings()
         {
             bool isActive = !ModuleIsNull();
             Fields["ThrustString"].guiActiveEditor = isActive;
@@ -72,7 +72,7 @@ namespace Ignition
 
         public override void Initialise()
         {
-            InitialiseStats();
+            InitialiseData();
             InitialiseInfoStrings();
         }
 
