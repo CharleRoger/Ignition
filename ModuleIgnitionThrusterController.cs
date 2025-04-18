@@ -36,12 +36,12 @@ namespace Ignition
 
         protected abstract bool ModuleIsNull();
         protected abstract string GetGroupName();
-        protected abstract void InitialiseData();
+        protected abstract void SetupOriginalData();
         protected abstract void ApplyPropellantCombinationToModule();
         protected abstract float GetG();
         protected abstract bool UseVelCurve();
 
-        protected virtual void InitialiseInfoStrings()
+        protected virtual void SetupInfoStrings()
         {
             bool isActive = !ModuleIsNull();
             Fields["ThrustString"].guiActiveEditor = isActive;
@@ -58,22 +58,10 @@ namespace Ignition
             Fields["IspString"].group.displayName = groupName;
         }
 
-        protected string GetValueString(string unit, float vacuumOriginal, float vacuumCurrent, float seaLevelCurrent = -1)
+        public override void SetupData()
         {
-            var str = vacuumCurrent.ToString("0.0") + unit;
-
-            if (seaLevelCurrent != -1) str = seaLevelCurrent.ToString("0.0") + unit + " — " + str;
-
-            if (vacuumCurrent > vacuumOriginal) str += " (<color=#44FF44>+" + Mathf.Round(100 * (vacuumCurrent / vacuumOriginal - 1)) + "</color>%)";
-            else if (vacuumCurrent < vacuumOriginal) str += " (<color=#FF8888>-" + Mathf.Round(100 * (1 - vacuumCurrent / vacuumOriginal)) + "</color>%)";
-
-            return str;
-        }
-
-        public override void Initialise()
-        {
-            InitialiseData();
-            InitialiseInfoStrings();
+            SetupOriginalData();
+            SetupInfoStrings();
         }
 
         private void ComputeNewStats()
@@ -128,6 +116,18 @@ namespace Ignition
             }
 
             return ispKeys.ToArray();
+        }
+
+        protected string GetValueString(string unit, float vacuumOriginal, float vacuumCurrent, float seaLevelCurrent = -1)
+        {
+            var str = vacuumCurrent.ToString("0.0") + unit;
+
+            if (seaLevelCurrent != -1) str = seaLevelCurrent.ToString("0.0") + unit + " — " + str;
+
+            if (vacuumCurrent > vacuumOriginal) str += " (<color=#44FF44>+" + Mathf.Round(100 * (vacuumCurrent / vacuumOriginal - 1)) + "</color>%)";
+            else if (vacuumCurrent < vacuumOriginal) str += " (<color=#FF8888>-" + Mathf.Round(100 * (1 - vacuumCurrent / vacuumOriginal)) + "</color>%)";
+
+            return str;
         }
 
         protected void SetInfoStrings()

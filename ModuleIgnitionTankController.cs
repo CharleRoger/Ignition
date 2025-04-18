@@ -86,5 +86,26 @@ namespace Ignition
             foreach (var propellant in PropellantConfigCurrent.Propellants) totalRatio += propellant.ratio;
             foreach (var propellant in PropellantConfigCurrent.Propellants) AddResource(propellant, volume * propellant.ratio / totalRatio);
         }
+
+        public override string GetInfo()
+        {
+            return "<b>Volume: </b>" + KSPUtil.LocalizeNumber(volume, "F1") + " l";
+        }
+
+        public override string GetModuleDisplayName()
+        {
+            return "Propellant tank";
+        }
+
+        public override void RecompilePartInfo()
+        {
+            if (part.partInfo is null || part.partInfo.moduleInfos is null) return;
+
+            for (int i = 0; i < part.partInfo.moduleInfos.Count; i++)
+            {
+                if (!part.partInfo.moduleInfos[i].moduleName.Contains("ModuleIgnitionTankController")) continue;
+                part.partInfo.moduleInfos[i].info = GetInfo();
+            }
+        }
     }
 }

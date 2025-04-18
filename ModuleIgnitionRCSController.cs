@@ -28,7 +28,7 @@ namespace Ignition
             return "RCS";
         }
 
-        protected override void InitialiseData()
+        protected override void SetupOriginalData()
         {
             if (ModuleIsNull()) return;
             if (ModuleRCS.atmosphereCurve.Curve.keys.Length == 0) return;
@@ -47,6 +47,20 @@ namespace Ignition
             ModuleRCS.maxFuelFlow = MaxFuelFlowCurrent;
             ModuleRCS.atmosphereCurve.Curve.keys = GetIspKeys();
             ModuleRCS.propellants = PropellantConfigCurrent.Propellants;
+        }
+
+        public override void RecompilePartInfo()
+        {
+            if (part.partInfo is null || part.partInfo.moduleInfos is null) return;
+
+            var rcsModules = part.FindModulesImplementing<ModuleRCS>();
+            var rcsIndex = 0;
+            for (int i = 0; i < part.partInfo.moduleInfos.Count; i++)
+            {
+                if (part.partInfo.moduleInfos[i].moduleName != "RCS" || part.partInfo.moduleInfos[i].moduleName != "RCSFX") continue;
+                part.partInfo.moduleInfos[i].info = rcsModules[rcsIndex].GetInfo();
+                rcsIndex++;
+            }
         }
 
         protected override float GetG()

@@ -56,8 +56,8 @@ namespace Ignition
             var ignitionResourceNodes = node.GetNodes("IGNITION_RESOURCE");
             for (int i = 0; i < ignitionResourceNodes.Length; i++)
             {
-                if (ignitionResourceNodes[i].HasValue("name") == false) continue;
-                if (ignitionResourceNodes[i].HasValue("Amount") == false && ignitionResourceNodes[i].HasValue("ScaledAmount") == false) continue;
+                if (!ignitionResourceNodes[i].HasValue("name")) continue;
+                if (!ignitionResourceNodes[i].HasValue("Amount") && !ignitionResourceNodes[i].HasValue("ScaledAmount")) continue;
 
                 IgnitionResource newIgnitionResource = new IgnitionResource();
                 newIgnitionResource.Load(ignitionResourceNodes[i]);
@@ -73,10 +73,10 @@ namespace Ignition
 
         protected override string GetGroupName()
         {
-            return IsMultiModeEngine ? "Engine mode \"" + engineID + " \"" : "Engine";
+            return IsMultiModeEngine ? "Engine mode \"" + engineID + "\"" : "Engine";
         }
 
-        protected override void InitialiseData()
+        protected override void SetupOriginalData()
         {
             if (ModuleIsNull()) return;
 
@@ -85,7 +85,7 @@ namespace Ignition
 
             IgnitionResources.Clear();
             IgnitionResourcesDisplayString = "";
-            if (IgnitionResourcesString != "")
+            if (!string.IsNullOrEmpty(IgnitionResourcesString))
             {
                 foreach (var requiredResourceString in IgnitionResourcesString.Split(';'))
                 {
@@ -111,9 +111,9 @@ namespace Ignition
             if (!ModuleEngines.useVelCurve) IspSeaLevelOriginal = ModuleEngines.atmosphereCurve.Curve.keys[1].value;
         }
 
-        protected override void InitialiseInfoStrings()
+        protected override void SetupInfoStrings()
         {
-            base.InitialiseInfoStrings();
+            base.SetupInfoStrings();
 
             var groupName = GetGroupName();
             Fields["IgnitionResourcesDisplayString"].group.name = groupName;
@@ -133,6 +133,20 @@ namespace Ignition
             ModuleEngines.atmosphereCurve.Curve.keys = GetIspKeys();
             ModuleEngines.propellants = PropellantConfigCurrent.Propellants;
             ModuleEngines.SetupPropellant();
+        }
+
+        public override void RecompilePartInfo()
+        {
+            if (part.partInfo is null || part.partInfo.moduleInfos is null) return;
+
+            var engineModules = part.FindModulesImplementing<ModuleEngines>();
+            var engineIndex = 0;
+            for (int i = 0; i < part.partInfo.moduleInfos.Count; i++)
+            {
+                if (part.partInfo.moduleInfos[i].moduleName != "Engine") continue;
+                part.partInfo.moduleInfos[i].info = engineModules[engineIndex].GetInfo();
+                engineIndex++;
+            }
         }
 
         protected override float GetG()
