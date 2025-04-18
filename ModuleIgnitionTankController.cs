@@ -5,9 +5,6 @@ namespace Ignition
     class ModuleIgnitionTankController : ModuleIgnitionController, IPartMassModifier, IPartCostModifier
     {
         [KSPField(isPersistant = true)]
-        public bool ignoreForIsp = false;
-
-        [KSPField(isPersistant = true)]
         public float volume = 0;
 
         [KSPField(isPersistant = true)]
