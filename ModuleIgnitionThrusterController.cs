@@ -27,13 +27,6 @@ namespace Ignition
         [UI_Label(scene = UI_Scene.All)]
         public string IspString = "";
 
-        protected struct ThrusterData
-        {
-            public float maxThrust;
-            public float maxFuelFlow;
-            public Keyframe[] ispKeys;
-        }
-
         protected abstract bool ModuleIsNull();
         protected abstract string GetGroupName();
         protected abstract void SetupOriginalData();
