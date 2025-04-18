@@ -16,26 +16,25 @@ namespace Ignition
             {
                 if (_moduleEngine is null)
                 {
-                    var allEngineModules = part.FindModulesImplementing<ModuleEngines>();
+                    var allModuleEnginess = part.FindModulesImplementing<ModuleEngines>();
                     if (engineID != "")
                     {
-                        foreach (var engineModule in allEngineModules)
+                        foreach (var ModuleEngines in allModuleEnginess)
                         {
-                            if (engineModule.engineID == engineID)
+                            if (ModuleEngines.engineID == engineID)
                             {
-                                _moduleEngine = engineModule;
+                                _moduleEngine = ModuleEngines;
                                 break;
                             }
                         }
                     }
-                    else if (allEngineModules.Count > 0) _moduleEngine = allEngineModules.FirstOrDefault();
+                    else if (allModuleEnginess.Count > 0) _moduleEngine = allModuleEnginess.FirstOrDefault();
                 }
                 return _moduleEngine;
             }
         }
 
         private bool IsMultiModeEngine = false;
-        private ModuleEngines EngineModule = null;
 
         private bool _ignited = false;
 
@@ -69,7 +68,7 @@ namespace Ignition
 
         public void Start()
         {
-            if (engineID == "") engineID = EngineModule.engineID;
+            if (engineID == "") engineID = ModuleEngines.engineID;
             IsMultiModeEngine = part.HasModuleImplementing<MultiModeEngine>();
 
             // Resources used for ignition
@@ -160,14 +159,14 @@ namespace Ignition
         {
             if (ModuleIsNull()) return 0;
 
-            float isp = EngineModule.atmosphereCurve.Curve.keys[0].value;
-            if (!EngineModule.useVelCurve) isp = EngineModule.atmosphereCurve.Curve.keys[1].value;
-            return 1000 * EngineModule.maxThrust / (EngineModule.g * isp);
+            float isp = ModuleEngines.atmosphereCurve.Curve.keys[0].value;
+            if (!ModuleEngines.useVelCurve) isp = ModuleEngines.atmosphereCurve.Curve.keys[1].value;
+            return 1000 * ModuleEngines.maxThrust / (ModuleEngines.g * isp);
         }
 
         private void FixedUpdate()
         {
-            if (!HighLogic.LoadedSceneIsFlight || EngineModule is null || !EngineModule.allowShutdown) return;
+            if (!HighLogic.LoadedSceneIsFlight || ModuleEngines is null || !ModuleEngines.allowShutdown) return;
 
             bool shouldBeIgnited = ShouldBeIgnited() || OtherEngineModeActive();
 
@@ -178,19 +177,19 @@ namespace Ignition
                 _ignited = AttemptIgnition(ref message);
                 if (message != "") ScreenMessages.PostScreenMessage(message, 3f, ScreenMessageStyle.UPPER_CENTER);
 
-                if (EngineModule.EngineIgnited)
+                if (ModuleEngines.EngineIgnited)
                 {
                     if (_ignited)
                     {
-                        if (EngineModule is ModuleEnginesFX engineModuleFX) engineModuleFX.part.Effects.Event(engineModuleFX.engageEffectName, engineModuleFX.transform.hierarchyCount);
-                        else EngineModule.PlayEngageFX();
+                        if (ModuleEngines is ModuleEnginesFX ModuleEnginesFX) ModuleEnginesFX.part.Effects.Event(ModuleEnginesFX.engageEffectName, ModuleEnginesFX.transform.hierarchyCount);
+                        else ModuleEngines.PlayEngageFX();
                     }
                     else
                     {
-                        if (EngineModule is ModuleEnginesFX engineModuleFX) engineModuleFX.part.Effects.Event(engineModuleFX.flameoutEffectName, engineModuleFX.transform.hierarchyCount);
-                        else EngineModule.BurstFlameoutGroups();
-                        EngineModule.SetRunningGroupsActive(false);
-                        EngineModule.Shutdown();
+                        if (ModuleEngines is ModuleEnginesFX ModuleEnginesFX) ModuleEnginesFX.part.Effects.Event(ModuleEnginesFX.flameoutEffectName, ModuleEnginesFX.transform.hierarchyCount);
+                        else ModuleEngines.BurstFlameoutGroups();
+                        ModuleEngines.SetRunningGroupsActive(false);
+                        ModuleEngines.Shutdown();
                     }
                 }
             }
@@ -198,27 +197,27 @@ namespace Ignition
 
         private bool EngineFlameout()
         {
-            return EngineModule is ModuleEnginesFX engineModuleFX ? engineModuleFX.getFlameoutState : EngineModule.flameout;
+            return ModuleEngines is ModuleEnginesFX ModuleEnginesFX ? ModuleEnginesFX.getFlameoutState : ModuleEngines.flameout;
         }
 
         private bool ShouldBeIgnited()
         {
-            if ((EngineModule.requestedThrottle <= 0.0f) || EngineFlameout() || (EngineModule.EngineIgnited == false && EngineModule.allowShutdown)) return false;
+            if ((ModuleEngines.requestedThrottle <= 0.0f) || EngineFlameout() || (ModuleEngines.EngineIgnited == false && ModuleEngines.allowShutdown)) return false;
 
-            if (!EngineModule.EngineIgnited) return vessel.ctrlState.mainThrottle > 0.0f || EngineModule.throttleLocked;
+            if (!ModuleEngines.EngineIgnited) return vessel.ctrlState.mainThrottle > 0.0f || ModuleEngines.throttleLocked;
 
-            return EngineModule.EngineIgnited;
+            return ModuleEngines.EngineIgnited;
         }
 
         bool OtherEngineModeActive()
         {
-            foreach (var engineModule in part.FindModulesImplementing<ModuleEngines>())
+            foreach (var ModuleEngines in part.FindModulesImplementing<ModuleEngines>())
             {
-                if (engineModule.engineID == engineID) continue;
+                if (ModuleEngines.engineID == engineID) continue;
 
                 bool flameout = EngineFlameout();
-                bool deprived = engineModule.CheckDeprived(0.01, out string propName);
-                if (engineModule.EngineIgnited == true && !flameout && !deprived)
+                bool deprived = ModuleEngines.CheckDeprived(0.01, out string propName);
+                if (ModuleEngines.EngineIgnited == true && !flameout && !deprived)
                 {
                     return true;
                 }
@@ -262,10 +261,10 @@ namespace Ignition
 
             // Compute ignition potential of propellant combination
             var totalRatio = 0f;
-            foreach (var propellant in EngineModule.propellants) totalRatio += propellant.ratio;
+            foreach (var propellant in ModuleEngines.propellants) totalRatio += propellant.ratio;
             var ignitionPotential = 1f;
             var propellantConfigs = GetPropellantConfigs();
-            foreach (var propellant in EngineModule.propellants)
+            foreach (var propellant in ModuleEngines.propellants)
             {
                 if (!propellantConfigs.ContainsKey(propellant.name)) continue;
                 ignitionPotential *= Mathf.Pow(propellantConfigs[propellant.name].IgnitionPotential, propellant.ratio / totalRatio);
