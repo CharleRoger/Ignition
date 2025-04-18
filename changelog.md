@@ -1,3 +1,14 @@
+# 1.0.0
+- Release
+- Added part tool tip info recompilation in the VAB, so engines, RCS and tanks now properly show their default configuration
+- Added ability to ignite unthrottlable engines
+- Added `ModuleIgnitionEngineController`, `ModuleIgnitionRCSController`, `ModuleIgnitionTankController`
+  - These handle all the actual computation, leaving `ModuleIgnitionPropellant` as a lightweight proxy module for allowing e.g. B9 part switching of individual propellants
+- Removed `ModuleIgnitor` as ignition simulation is now handled by `ModuleIgnitionEngineController`
+- Fixed retention of resource amount when switching subtypes and reloading a scene
+- Fixed ignition resource display in part action window
+- Fixed various small bugs in ignition simulation logic
+- Fixed stack gauge display
 # 0.3.0
 - Added engine thrust and isp to part action window
 - Added ModuleIgnitor and IgnitorResource
