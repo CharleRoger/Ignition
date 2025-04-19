@@ -25,7 +25,7 @@ namespace Ignition
 
         public Propellant GetPropellant(float ratio, bool drawStackGauge = false, bool ignoreForIsp = false)
         {
-            return PropellantConfigUtils.GetPropellant(ResourceName, 1, drawStackGauge, ignoreForIsp);
+            return PropellantConfigUtils.GetPropellant(ResourceName, ratio, drawStackGauge, ignoreForIsp);
         }
     }
 
