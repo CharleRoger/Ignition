@@ -1,3 +1,7 @@
+# 1.0.1
+- Fixed single-propellant engines undergoing ignition simulation
+  - A single propellant cannot "ignite" in the strict sense, so the engine should light without ignition simulation
+- Changed litre symbol from "l" to "L" for clarity
 # 1.0.0
 - Release
 - Added part tool tip info recompilation in the VAB, so engines, RCS and tanks now properly show their default configuration
