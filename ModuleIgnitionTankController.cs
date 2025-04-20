@@ -86,7 +86,7 @@ namespace Ignition
 
         public override string GetInfo()
         {
-            return "<b>Volume: </b>" + KSPUtil.LocalizeNumber(volume, "F1") + " l";
+            return "<b>Volume: </b>" + KSPUtil.LocalizeNumber(volume, "F1") + " L";
         }
 
         public override string GetModuleDisplayName()
