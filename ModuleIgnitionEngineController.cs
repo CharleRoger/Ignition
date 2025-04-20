@@ -176,6 +176,9 @@ namespace Ignition
         {
             if (!HighLogic.LoadedSceneIsFlight || ModuleEngines is null) return;
 
+            // A single propellant cannot "ignite" in the strict sense, so the engine should light without ignition simulation
+            if (PropellantConfigCurrent.Propellants.Count == 1) return;
+
             bool shouldBeIgnited = ShouldBeIgnited() || OtherEngineModeActive();
 
             if (!shouldBeIgnited) _ignited = false;
