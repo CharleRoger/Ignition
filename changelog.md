@@ -1,6 +1,7 @@
 # 1.0.1
 - Fixed single-propellant engines undergoing ignition simulation
   - A single propellant cannot "ignite" in the strict sense, so the engine should light without ignition simulation
+- Fixed part info recompilation for multi-mode engines
 - Changed litre symbol from "l" to "L" for clarity
 # 1.0.0
 - Release
