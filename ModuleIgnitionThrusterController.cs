@@ -31,6 +31,7 @@ namespace Ignition
         protected abstract string GetGroupName();
         protected abstract void SetupOriginalData();
         protected abstract void ApplyPropellantCombinationToModule();
+        protected abstract void RecompilePartInfo();
         protected abstract float GetG();
         protected abstract bool UseVelCurve();
 
@@ -137,6 +138,14 @@ namespace Ignition
                 ThrustString = GetValueString("kN", MaxThrustOriginal, MaxThrustCurrent, MaxThrustCurrent * IspSeaLevelCurrent / IspVacuumCurrent);
                 IspString = GetValueString("s", IspVacuumOriginal, IspVacuumCurrent, IspSeaLevelCurrent);
             }
+        }
+
+        public override string GetInfo()
+        {
+            UpdateAndApply(true);
+            RecompilePartInfo();
+
+            return base.GetInfo();
         }
     }
 }

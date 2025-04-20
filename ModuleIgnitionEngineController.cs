@@ -135,7 +135,7 @@ namespace Ignition
             ModuleEngines.SetupPropellant();
         }
 
-        public override void RecompilePartInfo()
+        protected override void RecompilePartInfo()
         {
             if (part.partInfo is null || part.partInfo.moduleInfos is null) return;
 

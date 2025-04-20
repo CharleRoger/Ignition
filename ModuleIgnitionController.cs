@@ -15,7 +15,6 @@ namespace Ignition
         protected PropellantConfigBase PropellantConfigCurrent = null;
 
         public abstract void ApplyPropellantConfig();
-        public abstract void RecompilePartInfo();
 
         public virtual void SetupData() {}
 
@@ -36,13 +35,6 @@ namespace Ignition
             UpdateAndApply(false);
         }
         
-        public override void OnAwake()
-        {
-            base.OnAwake();
-
-            UpdateAndApply(true);
-        }
-
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
@@ -50,12 +42,11 @@ namespace Ignition
             UpdateAndApply(true);
         }
 
-        private void UpdateAndApply(bool initialSetup)
+        protected void UpdateAndApply(bool initialSetup)
         {
             UpdatePropellantConfigs();
             if (initialSetup) SetupData();
             ApplyPropellantConfig();
-            RecompilePartInfo();
         }
 
         public void UpdatePropellantConfigs()

@@ -93,16 +93,5 @@ namespace Ignition
         {
             return "Propellant tank";
         }
-
-        public override void RecompilePartInfo()
-        {
-            if (part.partInfo is null || part.partInfo.moduleInfos is null) return;
-
-            for (int i = 0; i < part.partInfo.moduleInfos.Count; i++)
-            {
-                if (!part.partInfo.moduleInfos[i].moduleName.Contains("ModuleIgnitionTankController")) continue;
-                part.partInfo.moduleInfos[i].info = GetInfo();
-            }
-        }
     }
 }

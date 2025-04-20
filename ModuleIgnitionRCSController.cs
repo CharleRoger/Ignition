@@ -49,7 +49,7 @@ namespace Ignition
             ModuleRCS.propellants = PropellantConfigCurrent.Propellants;
         }
 
-        public override void RecompilePartInfo()
+        protected override void RecompilePartInfo()
         {
             if (part.partInfo is null || part.partInfo.moduleInfos is null) return;
 
