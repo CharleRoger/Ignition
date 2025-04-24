@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CommNet.Network;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -100,6 +101,16 @@ namespace Ignition
                         else IgnitionResourcesDisplayString += " (consumed if necessary)";
                     }
                     IgnitionResources.Add(ignitionResource);
+                }
+            }
+
+            if (PropellantNodeResourceNames is null && !(ModuleEngines.propellants is null))
+            {
+                PropellantNodeResourceNames = "";
+                for (int i = 0; i < ModuleEngines.propellants.Count; i++)
+                {
+                    PropellantNodeResourceNames += ModuleEngines.propellants[i].name;
+                    if (i != ModuleEngines.propellants.Count - 1) PropellantNodeResourceNames += ";";
                 }
             }
 

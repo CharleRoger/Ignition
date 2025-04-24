@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Ignition
@@ -18,6 +19,9 @@ namespace Ignition
         protected float IspSeaLevelCurrent = -1;
 
         protected float MaxFuelFlowCurrent => MaxThrustCurrent / (GetG() * IspVacuumCurrent);
+
+        [KSPField(isPersistant = true)]
+        public string PropellantNodeResourceNames = null;
 
         [KSPField(guiName = "<b>Thrust</b>")]
         [UI_Label(scene = UI_Scene.All)]
@@ -121,16 +125,18 @@ namespace Ignition
             return ispKeys.ToArray();
         }
 
-        protected List<Propellant> GetAllCurrentPropellants(List<Propellant> oldPropellants)
+        protected List<Propellant> GetAllCurrentPropellants(List<Propellant> allPropellantsPrevious)
         {
-            var newPropellants = PropellantConfigCurrent.Propellants;
-            var newPropellantNames = new List<string>();
-            foreach (var propellant in newPropellants) newPropellantNames.Add(propellant.name);
-            foreach (var propellant in oldPropellants)
+            // Add current configured propellants
+            var allPropellantsCurrent = new List<Propellant>(PropellantConfigCurrent.Propellants);
+
+            // Add propellants corresponding to original propellant nodes, i.e. not created by Ignition
+            foreach (var propellant in allPropellantsPrevious)
             {
-                if (!newPropellantNames.Contains(propellant.name)) newPropellants.Add(propellant);
+                if (PropellantNodeResourceNames.Split(';').Contains(propellant.name)) allPropellantsCurrent.Add(propellant);
             }
-            return newPropellants;
+
+            return allPropellantsCurrent;
         }
 
         protected string GetValueString(string unit, float vacuumOriginal, float vacuumCurrent, float seaLevelCurrent = -1)
