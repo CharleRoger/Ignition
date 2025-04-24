@@ -106,11 +106,8 @@ namespace Ignition
             if (MaxThrustOriginal != -1) return;
             MaxThrustOriginal = ModuleEngines.maxThrust;
 
-            var ispKeys = ModuleEngines.atmosphereCurve.Curve.keys;
-            if (ModuleEngines.useVelCurve) ispKeys = ModuleEngines.velCurve.Curve.keys;
-            if (ispKeys.Length == 0) return;
-            IspVacuumOriginal = GetKeyframeValue(ispKeys, 0);
-            IspSeaLevelOriginal = GetKeyframeValue(ispKeys, 1);
+            IspVacuumOriginal = GetKeyframeValue(ModuleEngines.atmosphereCurve.Curve.keys, 0);
+            IspSeaLevelOriginal = GetKeyframeValue(ModuleEngines.atmosphereCurve.Curve.keys, 1);
         }
 
         protected override void SetupInfoStrings()
