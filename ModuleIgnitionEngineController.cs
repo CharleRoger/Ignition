@@ -103,9 +103,10 @@ namespace Ignition
                 }
             }
 
+            if (ModuleEngines.atmosphereCurve.Curve.keys.Length == 0) return;
             if (MaxThrustOriginal != -1) return;
-            MaxThrustOriginal = ModuleEngines.maxThrust;
 
+            MaxThrustOriginal = ModuleEngines.maxThrust;
             IspVacuumOriginal = GetKeyframeValue(ModuleEngines.atmosphereCurve.Curve.keys, 0);
             IspSeaLevelOriginal = GetKeyframeValue(ModuleEngines.atmosphereCurve.Curve.keys, 1);
         }
@@ -130,7 +131,7 @@ namespace Ignition
             ModuleEngines.maxThrust = MaxThrustCurrent;
             ModuleEngines.maxFuelFlow = MaxFuelFlowCurrent;
             ModuleEngines.atmosphereCurve.Curve.keys = GetIspKeys();
-            ModuleEngines.propellants = PropellantConfigCurrent.Propellants;
+            ModuleEngines.propellants = GetAllCurrentPropellants(ModuleEngines.propellants);
             ModuleEngines.SetupPropellant();
         }
 

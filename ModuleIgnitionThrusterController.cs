@@ -121,6 +121,18 @@ namespace Ignition
             return ispKeys.ToArray();
         }
 
+        protected List<Propellant> GetAllCurrentPropellants(List<Propellant> oldPropellants)
+        {
+            var newPropellants = PropellantConfigCurrent.Propellants;
+            var newPropellantNames = new List<string>();
+            foreach (var propellant in newPropellants) newPropellantNames.Add(propellant.name);
+            foreach (var propellant in oldPropellants)
+            {
+                if (!newPropellantNames.Contains(propellant.name)) newPropellants.Add(propellant);
+            }
+            return newPropellants;
+        }
+
         protected string GetValueString(string unit, float vacuumOriginal, float vacuumCurrent, float seaLevelCurrent = -1)
         {
             var str = vacuumCurrent.ToString("0.0") + unit;

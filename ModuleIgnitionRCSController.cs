@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Ignition
 {
@@ -46,7 +47,7 @@ namespace Ignition
             ModuleRCS.thrusterPower = MaxThrustCurrent;
             ModuleRCS.maxFuelFlow = MaxFuelFlowCurrent;
             ModuleRCS.atmosphereCurve.Curve.keys = GetIspKeys();
-            ModuleRCS.propellants = PropellantConfigCurrent.Propellants;
+            ModuleRCS.propellants = GetAllCurrentPropellants(ModuleRCS.propellants);
         }
 
         protected override void RecompilePartInfo()
