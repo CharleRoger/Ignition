@@ -1,3 +1,5 @@
+# 1.0.2
+- Fixed isp key querying
 # 1.0.1
 - Fixed single-propellant engines undergoing ignition simulation
   - A single propellant cannot "ignite" in the strict sense, so the engine should light without ignition simulation

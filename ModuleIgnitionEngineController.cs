@@ -103,12 +103,14 @@ namespace Ignition
                 }
             }
 
-            if (ModuleEngines.atmosphereCurve.Curve.keys.Length == 0) return;
             if (MaxThrustOriginal != -1) return;
-
             MaxThrustOriginal = ModuleEngines.maxThrust;
-            IspVacuumOriginal = ModuleEngines.atmosphereCurve.Curve.keys[0].value;
-            if (!ModuleEngines.useVelCurve) IspSeaLevelOriginal = ModuleEngines.atmosphereCurve.Curve.keys[1].value;
+
+            var ispKeys = ModuleEngines.atmosphereCurve.Curve.keys;
+            if (ModuleEngines.useVelCurve) ispKeys = ModuleEngines.velCurve.Curve.keys;
+            if (ispKeys.Length == 0) return;
+            IspVacuumOriginal = GetKeyframeValue(ispKeys, 0);
+            IspSeaLevelOriginal = GetKeyframeValue(ispKeys, 1);
         }
 
         protected override void SetupInfoStrings()
@@ -156,11 +158,11 @@ namespace Ignition
             return ModuleEngines.g;
         }
 
-        protected override bool UseVelCurve()
+        protected override bool UseIspSeaLevel()
         {
             if (ModuleIsNull()) return false;
 
-            return ModuleEngines.useVelCurve;
+            return !ModuleEngines.useVelCurve && IspSeaLevelOriginal != -1;
         }
 
         private float GetEngineMassRate()

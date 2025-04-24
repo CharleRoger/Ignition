@@ -33,7 +33,7 @@ namespace Ignition
         protected abstract void ApplyPropellantCombinationToModule();
         protected abstract void RecompilePartInfo();
         protected abstract float GetG();
-        protected abstract bool UseVelCurve();
+        protected abstract bool UseIspSeaLevel();
 
         protected virtual void SetupInfoStrings()
         {
@@ -58,6 +58,15 @@ namespace Ignition
             SetupInfoStrings();
         }
 
+        protected float GetKeyframeValue(Keyframe[] keyframes, float time)
+        {
+            foreach (var keyframe in keyframes)
+            {
+                if (keyframe.time == time) return keyframe.value;
+            }
+            return -1;
+        }
+
         private void ComputeNewStats()
         {
             if (PropellantConfigOriginal is null || PropellantConfigCurrent is null) return;
@@ -76,7 +85,7 @@ namespace Ignition
             if (Mathf.Abs(ispVacuumChange) > 10) ispVacuumChange = Mathf.Round(ispVacuumChange / 5) * 5;
             IspVacuumCurrent = IspVacuumOriginal + ispVacuumChange;
 
-            if (!UseVelCurve())
+            if (UseIspSeaLevel())
             {
                 var ispSeaLevelMultiplier = Mathf.Pow(ispVacuumMultiplier, 1 / thrustMultiplier);
                 if (ispSeaLevelMultiplier < 0) ispSeaLevelMultiplier = 0;
@@ -103,7 +112,7 @@ namespace Ignition
         protected Keyframe[] GetIspKeys()
         {
             var ispKeys = new List<Keyframe> { new Keyframe(0, IspVacuumCurrent) };
-            if (!UseVelCurve())
+            if (UseIspSeaLevel())
             {
                 ispKeys.Add(new Keyframe(1, IspSeaLevelCurrent));
                 ispKeys.Add(new Keyframe(12, 0.001f));
@@ -128,15 +137,15 @@ namespace Ignition
         {
             if (ModuleIsNull()) return;
 
-            if (UseVelCurve())
-            {
-                ThrustString = GetValueString("kN", MaxThrustOriginal, MaxThrustCurrent);
-                IspString = GetValueString("s", IspVacuumOriginal, IspVacuumCurrent);
-            }
-            else
+            if (UseIspSeaLevel())
             {
                 ThrustString = GetValueString("kN", MaxThrustOriginal, MaxThrustCurrent, MaxThrustCurrent * IspSeaLevelCurrent / IspVacuumCurrent);
                 IspString = GetValueString("s", IspVacuumOriginal, IspVacuumCurrent, IspSeaLevelCurrent);
+            }
+            else
+            {
+                ThrustString = GetValueString("kN", MaxThrustOriginal, MaxThrustCurrent);
+                IspString = GetValueString("s", IspVacuumOriginal, IspVacuumCurrent);
             }
         }
 

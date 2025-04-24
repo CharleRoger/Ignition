@@ -35,8 +35,8 @@ namespace Ignition
             if (MaxThrustOriginal != -1) return;
 
             MaxThrustOriginal = ModuleRCS.thrusterPower;
-            IspVacuumOriginal = ModuleRCS.atmosphereCurve.Curve.keys[0].value;
-            IspSeaLevelOriginal = ModuleRCS.atmosphereCurve.Curve.keys[1].value;
+            IspVacuumOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 0);
+            IspSeaLevelOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 1);
         }
 
         protected override void ApplyPropellantCombinationToModule()
@@ -70,9 +70,9 @@ namespace Ignition
             return (float)ModuleRCS.G;
         }
 
-        protected override bool UseVelCurve()
+        protected override bool UseIspSeaLevel()
         {
-            return false;
+            return true;
         }
     }
 }
