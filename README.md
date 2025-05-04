@@ -144,7 +144,7 @@ RCS controllers cannot be configured with an ignitor resource.
 #### ModuleIgnitionTankController
 Controls propellant combinations and ignition simulation of a `ModuleEngines` with the following fields:
 - `moduleID` = Unique id of this module.
-- `volume` = Total volume for propellant storage in liters **NOT** stock KSP units of five-liters.
+- `volume` = Total volume for propellant storage in litres **NOT** stock KSP units of five-litres.
 - `addedMass` = Mass added to the part, not counting any resources.
 - `addedCost` = Cost added to the part, not counting any resources.
 
