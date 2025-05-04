@@ -75,8 +75,10 @@ namespace Ignition
 
         public override void ApplyPropellantConfig()
         {
-            if (PropellantConfigCurrent is null) return;
+            currentAddedMass = addedMass + GetTankMass(volume, 0.001f);
+            currentAddedCost = addedCost;
 
+            if (PropellantConfigCurrent is null) return;
             if (PropellantConfigCurrent.Propellants.Count == 0) return;
 
             var totalRatio = 0f;

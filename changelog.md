@@ -1,7 +1,8 @@
 # 1.1.0
+- Fixed isp key querying
+- Fixed "none" tank type mass
 - Changed behaviour of existing `PROPELLANT` nodes on `ModuleEngines` and `ModuleRCS` so that they are no longer removed automatically and now follow through into the new configuration
 - Changed setup of `MaxThrustOriginal`, `IspVacuumOriginal` and `IspSeaLevelOriginal` so that they can now be overridden via patch if required
-- Fixed isp key querying
 # 1.0.1
 - Fixed single-propellant engines undergoing ignition simulation
   - A single propellant cannot "ignite" in the strict sense, so the engine should light without ignition simulation
