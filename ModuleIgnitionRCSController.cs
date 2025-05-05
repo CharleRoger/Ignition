@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Ignition
 {
@@ -31,12 +32,21 @@ namespace Ignition
         protected override void SetupOriginalData()
         {
             if (ModuleIsNull()) return;
-            if (ModuleRCS.atmosphereCurve.Curve.keys.Length == 0) return;
-            if (MaxThrustOriginal != -1) return;
 
-            MaxThrustOriginal = ModuleRCS.thrusterPower;
-            IspVacuumOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 0);
-            IspSeaLevelOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 1);
+            if (PropellantNodeResourceNames is null && !(ModuleRCS.propellants is null))
+            {
+                PropellantNodeResourceNames = "";
+                for (int i = 0; i < ModuleRCS.propellants.Count; i++)
+                {
+                    PropellantNodeResourceNames += ModuleRCS.propellants[i];
+                    if (i != ModuleRCS.propellants.Count - 1) PropellantNodeResourceNames += ";";
+                }
+            }
+
+            if (ModuleRCS.atmosphereCurve.Curve.keys.Length == 0) return;
+            if (MaxThrustOriginal == -1) MaxThrustOriginal = ModuleRCS.thrusterPower;
+            if (IspVacuumOriginal == -1) IspVacuumOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 0);
+            if (IspSeaLevelOriginal == -1) IspSeaLevelOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 1);
         }
 
         protected override void ApplyPropellantCombinationToModule()
@@ -46,7 +56,7 @@ namespace Ignition
             ModuleRCS.thrusterPower = MaxThrustCurrent;
             ModuleRCS.maxFuelFlow = MaxFuelFlowCurrent;
             ModuleRCS.atmosphereCurve.Curve.keys = GetIspKeys();
-            ModuleRCS.propellants = PropellantConfigCurrent.Propellants;
+            ModuleRCS.propellants = GetAllCurrentPropellants(ModuleRCS.propellants);
         }
 
         protected override void RecompilePartInfo()

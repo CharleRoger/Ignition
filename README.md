@@ -99,6 +99,7 @@ Controller modules are used to modify engine modules, RCS modules, and resources
 #### ModuleIgnitionEngineController
 Controls propellant combinations and ignition simulation for a `ModuleEngines` with the following fields:
 - `engineID` = Unique id of the targeted engine module. Must be specified for a part with multiple engine modules, can be omitted otherwise.
+- `FixedIgnitors` = Count of single-use ignitors which cannot be replaced.
 
 The engine controller can be configured with any number of `IGNITION_RESOURCE`s, with the following fields:
 - `name` = Name of the resource to use.
@@ -144,7 +145,7 @@ RCS controllers cannot be configured with an ignitor resource.
 #### ModuleIgnitionTankController
 Controls propellant combinations and ignition simulation of a `ModuleEngines` with the following fields:
 - `moduleID` = Unique id of this module.
-- `volume` = Total volume for propellant storage in liters **NOT** stock KSP units of five-liters.
+- `volume` = Total volume for propellant storage in litres **NOT** stock KSP units of five-litres.
 - `addedMass` = Mass added to the part, not counting any resources.
 - `addedCost` = Cost added to the part, not counting any resources.
 
