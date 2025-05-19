@@ -131,9 +131,12 @@ namespace Ignition
             var allPropellantsCurrent = new List<Propellant>(PropellantConfigCurrent.Propellants);
 
             // Add propellants corresponding to original propellant nodes, i.e. not created by Ignition
+            var externalPropellantNames = PropellantNodeResourceNames.Split(';');
+            var currentConfiguredPropellantNames = new List<string>();
+            foreach (var propellant in PropellantConfigCurrent.Propellants) currentConfiguredPropellantNames.Add(propellant.name);
             foreach (var propellant in allPropellantsPrevious)
             {
-                if (PropellantNodeResourceNames.Split(';').Contains(propellant.name)) allPropellantsCurrent.Add(propellant);
+                if (externalPropellantNames.Contains(propellant.name) && !currentConfiguredPropellantNames.Contains(propellant.name)) allPropellantsCurrent.Add(propellant);
             }
 
             return allPropellantsCurrent;

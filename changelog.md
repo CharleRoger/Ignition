@@ -1,5 +1,6 @@
 # 1.1.1
 - Normalised auto-computed bipropellant ratios so they play nicer with additional externally configured propellants
+- Fixed pass-through of existing propellant nodes
 # 1.1.0
 - Fixed isp key querying
 - Fixed "none" tank type mass
