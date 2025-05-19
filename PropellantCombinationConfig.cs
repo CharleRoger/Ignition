@@ -145,8 +145,8 @@ namespace Ignition
             var nearestSixteenth = Mathf.Round(fuelFraction * 16) / 16;
             var fuelFractionRounded = Mathf.Abs(fuelFraction - nearestTenth) < Mathf.Abs(fuelFraction - nearestSixteenth) ? nearestTenth : nearestSixteenth;
 
-            var fuel = fuelConfig.GetPropellant(80 * fuelFractionRounded, true);
-            var oxidizer = oxidizerConfig.GetPropellant(Mathf.RoundToInt(80 * (1 - fuelFractionRounded)));
+            var fuel = fuelConfig.GetPropellant(fuelFractionRounded, true);
+            var oxidizer = oxidizerConfig.GetPropellant(1 - fuelFractionRounded);
             Propellants = new List<Propellant> { fuel, oxidizer };
         }
 
