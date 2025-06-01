@@ -195,7 +195,7 @@ namespace Ignition
 
         private void FixedUpdate()
         {
-            if (!HighLogic.LoadedSceneIsFlight || ModuleEngines is null) return;
+            if (!HighLogic.LoadedSceneIsFlight || ModuleEngines is null || PropellantConfigCurrent is null) return;
 
             // A single propellant cannot "ignite" in the strict sense, so the engine should light without ignition simulation
             if (PropellantConfigCurrent.Propellants.Count == 1) return;
