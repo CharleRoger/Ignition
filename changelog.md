@@ -1,3 +1,5 @@
+# 1.2.0
+- Fixed `ModuleIgnitionTankController` added mass and cost computation
 # 1.1.1
 - Normalised auto-computed bipropellant ratios so they play nicer with additional externally configured propellants
 - Fixed pass-through of existing propellant nodes

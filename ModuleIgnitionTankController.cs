@@ -19,7 +19,7 @@ namespace Ignition
         public float addedCost = 0;
 
         [KSPField(isPersistant = true)]
-        public float currentAddedCost;
+        public float currentAddedCost = 0;
         public float GetModuleCost(float baseCost, ModifierStagingSituation situation) => currentAddedCost;
         public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.FIXED;
 
@@ -62,8 +62,8 @@ namespace Ignition
             }
             if (amount > maxAmount) amount = maxAmount;
 
-            currentAddedMass = addedMass + GetTankMass(volume, density);
-            currentAddedCost = addedCost + amount * resourceDefinition.unitCost;
+            currentAddedMass += GetTankMass(volume, density);
+            currentAddedCost += maxAmount * resourceDefinition.unitCost;
 
             var resourceNode = new ConfigNode();
             resourceNode.name = "RESOURCE";
@@ -75,11 +75,14 @@ namespace Ignition
 
         public override void ApplyPropellantConfig()
         {
-            currentAddedMass = addedMass + GetTankMass(volume, 0.001f);
+            currentAddedMass = addedMass;
             currentAddedCost = addedCost;
 
-            if (PropellantConfigCurrent is null) return;
-            if (PropellantConfigCurrent.Propellants.Count == 0) return;
+            if (PropellantConfigCurrent is null || PropellantConfigCurrent.Propellants.Count == 0)
+            {
+                currentAddedMass += GetTankMass(volume, 0.001f);
+                return;
+            }
 
             var totalRatio = 0f;
             foreach (var propellant in PropellantConfigCurrent.Propellants) totalRatio += propellant.ratio;
