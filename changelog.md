@@ -1,5 +1,6 @@
-# 1.2.0
+# 1.1.2
 - Fixed `ModuleIgnitionTankController` added mass and cost computation
+- Fixed loading of `drawStackGauge` field on `PROPELLANT` nodes in a `PropellantCombinationConfig`
 # 1.1.1
 - Normalised auto-computed bipropellant ratios so they play nicer with additional externally configured propellants
 - Fixed pass-through of existing propellant nodes

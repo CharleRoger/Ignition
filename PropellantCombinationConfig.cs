@@ -128,6 +128,7 @@ namespace Ignition
                 var propellant = new Propellant();
                 propellant.Load(propellantNode);
                 propellant.displayName = propellant.name;
+                propellant.drawStackGauge = propellantNode.HasValue("drawStackGauge") && propellantNode.GetValue("drawStackGauge").ToLower() == "true";
                 Propellants.Add(propellant);
             }
         }
