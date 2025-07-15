@@ -60,8 +60,9 @@ namespace Ignition
 
             if (part.Resources.Contains(resourceName))
             {
-                var previousAmount = (float)part.Resources.Get(resourceName).amount;
-                var previousMaxAmount = (float)part.Resources.Get(resourceName).maxAmount;
+                var resource = part.Resources.Get(resourceName);
+                var previousAmount = (float)resource.amount;
+                var previousMaxAmount = (float)resource.maxAmount;
 
                 if (previousAmount < previousMaxAmount) totalAmount = previousAmount;
                 totalMaxAmount += previousMaxAmount;
@@ -71,12 +72,8 @@ namespace Ignition
             currentAddedCost += addedMaxAmount * resourceDefinition.unitCost;
 
             if (totalAmount < 0) totalAmount = 0;
+            if (totalMaxAmount < 0) totalMaxAmount = 0;
             if (totalAmount > totalMaxAmount) totalAmount = totalMaxAmount;
-            if (totalMaxAmount < 1e-6)
-            {
-                part.RemoveResource(resourceName);
-                return;
-            }
 
             var resourceNode = new ConfigNode();
             resourceNode.name = "RESOURCE";

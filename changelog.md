@@ -1,3 +1,5 @@
+# 1.1.3.1
+- Fixed removal of previous resource when `ModuleIgnitionTankController` is reloaded which was causing a massive time complexity issue for reasons I do not fully understand
 # 1.1.3
 - Fixed multiple `ModuleIgnitionTankController`s controlling volumes of the same resource
 # 1.1.2
