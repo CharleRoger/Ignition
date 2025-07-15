@@ -1,3 +1,5 @@
+# 1.1.3
+- Fixed multiple `ModuleIgnitionTankController`s controlling volumes of the same resource
 # 1.1.2
 - Fixed `ModuleIgnitionTankController` added mass and cost computation
 - Fixed loading of `drawStackGauge` field on `PROPELLANT` nodes in a `PropellantCombinationConfig`

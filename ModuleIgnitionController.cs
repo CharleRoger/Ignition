@@ -14,6 +14,8 @@ namespace Ignition
         protected PropellantConfigBase PropellantConfigOriginal = null;
         protected PropellantConfigBase PropellantConfigCurrent = null;
 
+        public virtual void UnapplyPropellantConfig() {}
+
         public abstract void ApplyPropellantConfig();
 
         public virtual void SetupData() {}
@@ -42,8 +44,9 @@ namespace Ignition
             UpdateAndApply(true);
         }
 
-        protected void UpdateAndApply(bool initialSetup)
+        public void UpdateAndApply(bool initialSetup)
         {
+            UnapplyPropellantConfig();
             UpdatePropellantConfigs();
             if (initialSetup) SetupData();
             ApplyPropellantConfig();

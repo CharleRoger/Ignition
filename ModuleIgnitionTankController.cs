@@ -30,7 +30,7 @@ namespace Ignition
 
         public override void OnStart(StartState state)
         {
-            ApplyPropellantConfig();
+            UpdatePropellantConfigs();
         }
 
         private float GetUnitVolume(string resourceName)
@@ -46,34 +46,47 @@ namespace Ignition
             return volume * Mathf.Round(2500000 * Mathf.Pow(resourceDensity, 2 / 3f)) / 200000000;
         }
 
-        private void AddResource(Propellant propellant, float volume)
+        private void AddResource(Propellant propellant, float addedVolume)
         {
             var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(propellant.name);
             var unitVolume = GetUnitVolume(propellant.name);
             var density = resourceDefinition.density / unitVolume;
 
-            var maxAmount = volume / unitVolume;
-            var amount = float.MaxValue;
+            var addedAmount = double.MaxValue;
+            var addedMaxAmount = addedVolume / unitVolume;
+
+            var totalAmount = addedAmount;
+            var totalMaxAmount = addedMaxAmount;
+
             if (part.Resources.Contains(propellant.name))
             {
-                var previousMaxAmount = part.Resources.Get(propellant.name).maxAmount;
-                var previousAmount = part.Resources.Get(propellant.name).amount;
-                if (previousAmount < previousMaxAmount) amount = (float)part.Resources.Get(propellant.name).amount;
-            }
-            if (amount > maxAmount) amount = maxAmount;
+                var previousAmount = (float)part.Resources.Get(propellant.name).amount;
+                var previousMaxAmount = (float)part.Resources.Get(propellant.name).maxAmount;
 
-            currentAddedMass += GetTankMass(volume, density);
-            currentAddedCost += maxAmount * resourceDefinition.unitCost;
+                if (previousAmount < previousMaxAmount) totalAmount = previousAmount;
+                totalMaxAmount += previousMaxAmount;
+            }
+
+            currentAddedMass += GetTankMass(addedVolume, density);
+            currentAddedCost += addedMaxAmount * resourceDefinition.unitCost;
+
+            if (totalAmount < 0) totalAmount = 0;
+            if (totalAmount > totalMaxAmount) totalAmount = totalMaxAmount;
+            if (totalMaxAmount <= 1e-6)
+            {
+                part.RemoveResource(propellant.name);
+                return;
+            }
 
             var resourceNode = new ConfigNode();
             resourceNode.name = "RESOURCE";
             resourceNode.AddValue("name", propellant.name);
-            resourceNode.AddValue("amount", amount);
-            resourceNode.AddValue("maxAmount", maxAmount);
+            resourceNode.AddValue("amount", totalAmount);
+            resourceNode.AddValue("maxAmount", totalMaxAmount);
             part.SetResource(resourceNode);
         }
 
-        public override void ApplyPropellantConfig()
+        private void AddOrRemoveConfiguredPropellant(bool addNotRemove)
         {
             currentAddedMass = addedMass;
             currentAddedCost = addedCost;
@@ -85,8 +98,19 @@ namespace Ignition
             }
 
             var totalRatio = 0f;
+            var addedVolume = addNotRemove ? volume : -volume;
             foreach (var propellant in PropellantConfigCurrent.Propellants) totalRatio += propellant.ratio;
-            foreach (var propellant in PropellantConfigCurrent.Propellants) AddResource(propellant, volume * propellant.ratio / totalRatio);
+            foreach (var propellant in PropellantConfigCurrent.Propellants) AddResource(propellant, addedVolume * propellant.ratio / totalRatio);
+        }
+
+        public override void UnapplyPropellantConfig()
+        {
+            AddOrRemoveConfiguredPropellant(false);
+        }
+
+        public override void ApplyPropellantConfig()
+        {
+            AddOrRemoveConfiguredPropellant(true);
         }
 
         public override string GetInfo()

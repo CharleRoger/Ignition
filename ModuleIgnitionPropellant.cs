@@ -11,9 +11,6 @@ namespace Ignition
         public string resourceName;
 
         [KSPField(isPersistant = true)]
-        public string resourceNamePrevious = null;
-
-        [KSPField(isPersistant = true)]
         public string resourceNameOriginal = null;
 
         [KSPField(isPersistant = true)]
@@ -32,25 +29,10 @@ namespace Ignition
             if (resourceName is null) return;
 
             if (resourceNameOriginal is null) resourceNameOriginal = resourceName;
-            if (resourceNamePrevious is null) resourceNamePrevious = resourceName;
 
-            var connectedControllerModules = new List<ModuleIgnitionController>();
             foreach (var controllerModule in part.FindModulesImplementing<ModuleIgnitionController>())
             {
-                if (controllerModule.IsConnectedToPropellantModule(moduleID)) connectedControllerModules.Add(controllerModule);
-                if (controllerModule is ModuleIgnitionTankController)
-                {
-                    if (resourceName != resourceNameOriginal) part.Resources.Remove(resourceNameOriginal);
-                    if (resourceName != resourceNamePrevious) part.Resources.Remove(resourceNamePrevious);
-                }
-            }
-
-            resourceNamePrevious = resourceName;
-
-            foreach (var controllerModule in connectedControllerModules)
-            {
-                controllerModule.UpdatePropellantConfigs();
-                controllerModule.ApplyPropellantConfig();
+                if (controllerModule.IsConnectedToPropellantModule(moduleID)) controllerModule.UpdateAndApply(false);
             }
         }
     }
