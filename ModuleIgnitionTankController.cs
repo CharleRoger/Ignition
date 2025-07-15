@@ -46,10 +46,10 @@ namespace Ignition
             return volume * Mathf.Round(2500000 * Mathf.Pow(resourceDensity, 2 / 3f)) / 200000000;
         }
 
-        private void AddResource(Propellant propellant, float addedVolume)
+        private void AddResource(string resourceName, float addedVolume)
         {
-            var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(propellant.name);
-            var unitVolume = GetUnitVolume(propellant.name);
+            var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            var unitVolume = GetUnitVolume(resourceName);
             var density = resourceDefinition.density / unitVolume;
 
             var addedAmount = double.MaxValue;
@@ -58,10 +58,10 @@ namespace Ignition
             var totalAmount = addedAmount;
             var totalMaxAmount = addedMaxAmount;
 
-            if (part.Resources.Contains(propellant.name))
+            if (part.Resources.Contains(resourceName))
             {
-                var previousAmount = (float)part.Resources.Get(propellant.name).amount;
-                var previousMaxAmount = (float)part.Resources.Get(propellant.name).maxAmount;
+                var previousAmount = (float)part.Resources.Get(resourceName).amount;
+                var previousMaxAmount = (float)part.Resources.Get(resourceName).maxAmount;
 
                 if (previousAmount < previousMaxAmount) totalAmount = previousAmount;
                 totalMaxAmount += previousMaxAmount;
@@ -72,15 +72,15 @@ namespace Ignition
 
             if (totalAmount < 0) totalAmount = 0;
             if (totalAmount > totalMaxAmount) totalAmount = totalMaxAmount;
-            if (totalMaxAmount <= 1e-6)
+            if (totalMaxAmount < 1e-6)
             {
-                part.RemoveResource(propellant.name);
+                part.RemoveResource(resourceName);
                 return;
             }
 
             var resourceNode = new ConfigNode();
             resourceNode.name = "RESOURCE";
-            resourceNode.AddValue("name", propellant.name);
+            resourceNode.AddValue("name", resourceName);
             resourceNode.AddValue("amount", totalAmount);
             resourceNode.AddValue("maxAmount", totalMaxAmount);
             part.SetResource(resourceNode);
@@ -100,7 +100,7 @@ namespace Ignition
             var totalRatio = 0f;
             var addedVolume = addNotRemove ? volume : -volume;
             foreach (var propellant in PropellantConfigCurrent.Propellants) totalRatio += propellant.ratio;
-            foreach (var propellant in PropellantConfigCurrent.Propellants) AddResource(propellant, addedVolume * propellant.ratio / totalRatio);
+            foreach (var propellant in PropellantConfigCurrent.Propellants) AddResource(propellant.name, addedVolume * propellant.ratio / totalRatio);
         }
 
         public override void UnapplyPropellantConfig()
