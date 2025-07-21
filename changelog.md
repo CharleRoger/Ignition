@@ -1,6 +1,7 @@
 # 1.1.4
-- Restricted `ModuleIgnitionTankController` to only modify its host part in the editor
+- Restricted `ModuleIgnitionTankController` to only add its configured resources to its host part in the editor
   - Fixes various issues which keep arising with resource amounts not being properly maintained
+- Added removal of zero-volume resources from part when `OnStart` is called
 # 1.1.3.1
 - Fixed removal of previous resource when `ModuleIgnitionTankController` is reloaded which was causing a massive time complexity issue for reasons I do not fully understand
 # 1.1.3

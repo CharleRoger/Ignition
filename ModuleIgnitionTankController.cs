@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Ignition
 {
@@ -40,6 +41,13 @@ namespace Ignition
         public override void OnStart(StartState state)
         {
             UpdatePropellantConfigs();
+
+            var resourcesToRemove = new List<string>();
+            foreach (var resource in part.Resources)
+            {
+                if (resource.maxAmount <= 1e-6) resourcesToRemove.Add(resource.resourceName);
+            }
+            foreach (var resourceName in resourcesToRemove) part.RemoveResource(resourceName);
         }
 
         private float GetUnitVolume(string resourceName)
