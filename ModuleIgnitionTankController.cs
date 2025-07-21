@@ -28,6 +28,15 @@ namespace Ignition
             base.OnLoad(node);
         }
 
+        public override void UpdateAndApply(bool initialSetup)
+        {
+            if (!HighLogic.LoadedSceneIsEditor) return;
+
+            UnapplyPropellantConfig();
+            UpdatePropellantConfigs();
+            ApplyPropellantConfig();
+        }
+
         public override void OnStart(StartState state)
         {
             UpdatePropellantConfigs();

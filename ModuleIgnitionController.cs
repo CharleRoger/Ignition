@@ -18,6 +18,8 @@ namespace Ignition
 
         public abstract void ApplyPropellantConfig();
 
+        public abstract void UpdateAndApply(bool initialSetup);
+
         public virtual void SetupData() {}
 
         public override void OnLoad(ConfigNode node)
@@ -42,14 +44,6 @@ namespace Ignition
             base.OnStart(state);
 
             UpdateAndApply(true);
-        }
-
-        public void UpdateAndApply(bool initialSetup)
-        {
-            UnapplyPropellantConfig();
-            UpdatePropellantConfigs();
-            if (initialSetup) SetupData();
-            ApplyPropellantConfig();
         }
 
         public void UpdatePropellantConfigs()

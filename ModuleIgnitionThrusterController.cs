@@ -62,6 +62,14 @@ namespace Ignition
             SetupInfoStrings();
         }
 
+        public override void UpdateAndApply(bool initialSetup)
+        {
+            UnapplyPropellantConfig();
+            UpdatePropellantConfigs();
+            if (initialSetup) SetupData();
+            ApplyPropellantConfig();
+        }
+
         protected float GetKeyframeValue(Keyframe[] keyframes, float time)
         {
             foreach (var keyframe in keyframes)
