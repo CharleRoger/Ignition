@@ -1,30 +1,30 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Ignition
 {
     class ModuleIgnitionTankController : ModuleIgnitionController, IPartMassModifier, IPartCostModifier
     {
         [KSPField(isPersistant = true)]
-        public float volume = 0;
-        private float VolumeScaled => GetScale(VolumeScaleExponent) * volume;
+        public double volume = 0;
+        private double VolumeScaled => GetScale(VolumeScaleExponent) * volume;
 
         [KSPField(isPersistant = true)]
-        public float addedMass = 0;
-        public float AddedMassScaled => GetScale(MassScaleExponent) * addedMass;
+        public double addedMass = 0;
+        public double AddedMassScaled => GetScale(MassScaleExponent) * addedMass;
 
         [KSPField(isPersistant = true)]
-        public float currentAddedMass = 0;
-        public float GetModuleMass(float baseMass, ModifierStagingSituation situation) => currentAddedMass;
+        public double currentAddedMass = 0;
+        public float GetModuleMass(float baseMass, ModifierStagingSituation situation) => (float)currentAddedMass;
         public ModifierChangeWhen GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
 
         [KSPField(isPersistant = true)]
-        public float addedCost = 0;
-        public float AddedCostScaled => GetScale(CostScaleExponent) * addedCost;
+        public double addedCost = 0;
+        public double AddedCostScaled => GetScale(CostScaleExponent) * addedCost;
 
         [KSPField(isPersistant = true)]
-        public float currentAddedCost = 0;
-        public float GetModuleCost(float baseCost, ModifierStagingSituation situation) => currentAddedCost;
+        public double currentAddedCost = 0;
+        public float GetModuleCost(float baseCost, ModifierStagingSituation situation) => (float)currentAddedCost;
         public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.FIXED;
 
         public override void OnStart(StartState state)
@@ -38,25 +38,25 @@ namespace Ignition
             var resourcesToRemove = new List<string>();
             foreach (var resource in part.Resources)
             {
-                if (resource.maxAmount <= 1e-3) resourcesToRemove.Add(resource.resourceName);
+                if (resource.maxAmount < 1e-6) resourcesToRemove.Add(resource.resourceName);
             }
             foreach (var resourceName in resourcesToRemove) part.RemoveResource(resourceName);
         }
 
-        private float GetUnitVolume(string resourceName)
+        private double GetUnitVolume(string resourceName)
         {
-            if (resourceName == "LiquidFuel") return 5f;
-            if (resourceName == "Oxidizer") return 5f;
-            if (resourceName == "MonoPropellant") return 4f;
-            return 1f;
+            if (resourceName == "LiquidFuel") return 5;
+            if (resourceName == "Oxidizer") return 5;
+            if (resourceName == "MonoPropellant") return 4;
+            return 1;
         }
 
-        private float GetTankMass(float volume, float resourceDensity)
+        private double GetTankMass(double volume, double resourceDensity)
         {
-            return volume * Mathf.Round(2500000 * Mathf.Pow(resourceDensity, 2 / 3f)) / 200000000;
+            return volume * Math.Round(2500000 * Math.Pow(resourceDensity, 2 / 3.0)) / 200000000;
         }
 
-        private void AddResource(string resourceName, float addedVolume)
+        private void AddResource(string resourceName, double addedVolume)
         {
             var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(resourceName);
             var unitVolume = GetUnitVolume(resourceName);
@@ -71,8 +71,8 @@ namespace Ignition
             if (part.Resources.Contains(resourceName))
             {
                 var resource = part.Resources.Get(resourceName);
-                var previousAmount = (float)resource.amount;
-                var previousMaxAmount = (float)resource.maxAmount;
+                var previousAmount = resource.amount;
+                var previousMaxAmount = resource.maxAmount;
 
                 if (previousAmount < previousMaxAmount) totalAmount = previousAmount;
                 totalMaxAmount += previousMaxAmount;
@@ -101,11 +101,11 @@ namespace Ignition
 
             if (PropellantConfigCurrent is null || PropellantConfigCurrent.Propellants.Count == 0)
             {
-                currentAddedMass += GetTankMass(addedVolume, 0.001f);
+                currentAddedMass += GetTankMass(addedVolume, 0.001);
                 return;
             }
 
-            var totalRatio = 0f;
+            var totalRatio = 0.0;
             foreach (var propellant in PropellantConfigCurrent.Propellants) totalRatio += propellant.ratio;
             foreach (var propellant in PropellantConfigCurrent.Propellants) AddResource(propellant.name, addedVolume * propellant.ratio / totalRatio);
         }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Ignition
+﻿namespace Ignition
 {
     public class ModuleIgnitionPropellant : PartModule
     {
@@ -14,7 +12,7 @@ namespace Ignition
         public string resourceNameOriginal = null;
 
         [KSPField(isPersistant = true)]
-        public float ratio = 0;
+        public double ratio = 0;
 
         [KSPField(isPersistant = true)]
         public bool drawStackGauge = false;
@@ -42,7 +40,7 @@ namespace Ignition
         private ModuleIgnitionPropellant Module;
         private bool UseOriginalResourceNames;
         public string moduleID => Module.moduleID;
-        public float ratio => Module.ratio;
+        public double ratio => Module.ratio;
         public bool drawStackGauge => Module.drawStackGauge;
         public bool ignoreForIsp => Module.ignoreForIsp;
 

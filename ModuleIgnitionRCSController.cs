@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 
 namespace Ignition
 {
@@ -53,7 +52,7 @@ namespace Ignition
         {
             if (ModuleIsNull()) return;
 
-            ModuleRCS.thrusterPower = MaxThrustCurrent;
+            ModuleRCS.thrusterPower = (float)MaxThrustCurrent;
             ModuleRCS.maxFuelFlow = MaxFuelFlowCurrent;
             ModuleRCS.atmosphereCurve.Curve.keys = GetIspKeys();
             ModuleRCS.propellants = GetAllCurrentPropellants(ModuleRCS.propellants);
@@ -73,11 +72,11 @@ namespace Ignition
             }
         }
 
-        protected override float GetG()
+        protected override double GetG()
         {
-            if (ModuleIsNull()) return 9.80665f;
+            if (ModuleIsNull()) return 9.80665;
 
-            return (float)ModuleRCS.G;
+            return (double)ModuleRCS.G;
         }
 
         protected override bool UseIspSeaLevel()
@@ -85,7 +84,7 @@ namespace Ignition
             return true;
         }
 
-        protected override float GetScaledMaxThrustOriginal()
+        protected override double GetScaledMaxThrustOriginal()
         {
             return GetScale(RCSThrustScaleExponent) * MaxThrustOriginal;
         }

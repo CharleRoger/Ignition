@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Ignition
 {
     public class PropellantCombinationConfig : PropellantConfigBase
     {
-        private float TotalPropellantRatio
+        private double TotalPropellantRatio
         {
             get
             {
-                var totalRatio = 0f;
+                var totalRatio = 0.0;
                 foreach (var propellant in Propellants)
                 {
                     if (propellant.ignoreForIsp) continue;
@@ -21,8 +21,8 @@ namespace Ignition
             }
         }
 
-        private float _thrustMultiplier = 0;
-        public override float ThrustMultiplier
+        private double _thrustMultiplier = 0;
+        public override double ThrustMultiplier
         {
             get
             {
@@ -33,7 +33,7 @@ namespace Ignition
                     {
                         if (propellant.ignoreForIsp) continue;
 
-                        _thrustMultiplier *= Mathf.Pow(PropellantConfigs[propellant.name].ThrustMultiplier, propellant.ratio / TotalPropellantRatio);
+                        _thrustMultiplier *= Math.Pow(PropellantConfigs[propellant.name].ThrustMultiplier, propellant.ratio / TotalPropellantRatio);
                     }
                 }
 
@@ -45,8 +45,8 @@ namespace Ignition
             }
         }
 
-        private float _ispMultiplier = 0;
-        public override float IspMultiplier
+        private double _ispMultiplier = 0;
+        public override double IspMultiplier
         {
             get
             {
@@ -57,7 +57,7 @@ namespace Ignition
                     {
                         if (propellant.ignoreForIsp) continue;
 
-                        _ispMultiplier *= Mathf.Pow(PropellantConfigs[propellant.name].IspMultiplier, propellant.ratio / TotalPropellantRatio);
+                        _ispMultiplier *= Math.Pow(PropellantConfigs[propellant.name].IspMultiplier, propellant.ratio / TotalPropellantRatio);
                     }
                 }
 
@@ -69,8 +69,8 @@ namespace Ignition
             }
         }
 
-        private float _ignitionPotential = 0;
-        public override float IgnitionPotential
+        private double _ignitionPotential = 0;
+        public override double IgnitionPotential
         {
             get
             {
@@ -81,7 +81,7 @@ namespace Ignition
                     {
                         if (propellant.ignoreForIsp) continue;
 
-                        _ignitionPotential *= Mathf.Pow(PropellantConfigs[propellant.name].IgnitionPotential, propellant.ratio / TotalPropellantRatio);
+                        _ignitionPotential *= Math.Pow(PropellantConfigs[propellant.name].IgnitionPotential, propellant.ratio / TotalPropellantRatio);
                     }
                 }
 
@@ -141,10 +141,10 @@ namespace Ignition
 
         public PropellantCombinationConfig(PropellantConfig fuelConfig, PropellantConfig oxidizerConfig)
         {
-            var fuelFraction = fuelConfig.MixtureConstant / (float)(fuelConfig.MixtureConstant + oxidizerConfig.MixtureConstant);
-            var nearestTenth = Mathf.Round(fuelFraction * 10) / 10;
-            var nearestSixteenth = Mathf.Round(fuelFraction * 16) / 16;
-            var fuelFractionRounded = Mathf.Abs(fuelFraction - nearestTenth) < Mathf.Abs(fuelFraction - nearestSixteenth) ? nearestTenth : nearestSixteenth;
+            var fuelFraction = fuelConfig.MixtureConstant / (double)(fuelConfig.MixtureConstant + oxidizerConfig.MixtureConstant);
+            var nearestTenth = Math.Round(fuelFraction * 10) / 10;
+            var nearestSixteenth = Math.Round(fuelFraction * 16) / 16;
+            var fuelFractionRounded = Math.Abs(fuelFraction - nearestTenth) < Math.Abs(fuelFraction - nearestSixteenth) ? nearestTenth : nearestSixteenth;
 
             var fuel = fuelConfig.GetPropellant(fuelFractionRounded, true);
             var oxidizer = oxidizerConfig.GetPropellant(1 - fuelFractionRounded);

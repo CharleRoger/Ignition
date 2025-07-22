@@ -1,6 +1,5 @@
-﻿using CommNet.Network;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 using static Ignition.PropellantConfigUtils;
 
 namespace Ignition
@@ -16,9 +15,9 @@ namespace Ignition
         protected PropellantConfigBase PropellantConfigOriginal = null;
         protected PropellantConfigBase PropellantConfigCurrent = null;
 
-        protected float ScaleFactorPrevious = 1;
-        public float ScaleFactor = 1;
-        private Dictionary<string, float> ScaleExponents = new Dictionary<string, float>();
+        protected double ScaleFactorPrevious = 1;
+        public double ScaleFactor = 1;
+        private Dictionary<string, double> ScaleExponents = new Dictionary<string, double>();
 
         protected const string MassScaleExponent = "mass";
         protected const string CostScaleExponent = "cost";
@@ -41,17 +40,17 @@ namespace Ignition
                     switch (node.GetValue("name"))
                     {
                         case "TweakScale":
-                            if (node.HasValue("MassScale")) ScaleExponents[MassScaleExponent] = float.Parse(node.GetValue("MassScale"));
-                            if (node.HasValue("DryCost")) ScaleExponents[CostScaleExponent] = float.Parse(node.GetValue("DryCost"));
+                            if (node.HasValue("MassScale")) ScaleExponents[MassScaleExponent] = double.Parse(node.GetValue("MassScale"));
+                            if (node.HasValue("DryCost")) ScaleExponents[CostScaleExponent] = double.Parse(node.GetValue("DryCost"));
                             break;
                         case "Part":
-                            if (node.HasNode("Resources") && node.GetNode("Resources").HasValue("!amount")) ScaleExponents[VolumeScaleExponent] = float.Parse(node.GetNode("Resources").GetValue("!amount"));
+                            if (node.HasNode("Resources") && node.GetNode("Resources").HasValue("!amount")) ScaleExponents[VolumeScaleExponent] = double.Parse(node.GetNode("Resources").GetValue("!amount"));
                             break;
                         case "ModuleEngines":
-                            if (node.HasValue("maxFuelFlow")) ScaleExponents[EngineThrustScaleExponent] = float.Parse(node.GetValue("maxFuelFlow"));
+                            if (node.HasValue("maxFuelFlow")) ScaleExponents[EngineThrustScaleExponent] = double.Parse(node.GetValue("maxFuelFlow"));
                             break;
                         case "ModuleRCS":
-                            if (node.HasValue("thrusterPower")) ScaleExponents[RCSThrustScaleExponent] = float.Parse(node.GetValue("thrusterPower"));
+                            if (node.HasValue("thrusterPower")) ScaleExponents[RCSThrustScaleExponent] = double.Parse(node.GetValue("thrusterPower"));
                             break;
                         default:
                             break;
@@ -137,9 +136,9 @@ namespace Ignition
             }
         }
 
-        public float GetScale(string key)
+        public double GetScale(string key)
         {
-            return ScaleExponents.ContainsKey(key) ? Mathf.Pow(ScaleFactor, ScaleExponents[key]) : 0;
+            return ScaleExponents.ContainsKey(key) ? Math.Pow(ScaleFactor, ScaleExponents[key]) : 0;
         }
 
         public bool IsConnectedToPropellantModule(string moduleID)

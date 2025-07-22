@@ -22,7 +22,7 @@ namespace Ignition
             ResourceName = resourceName;
         }
 
-        public Propellant GetPropellant(float ratio, bool drawStackGauge = false, bool ignoreForIsp = false)
+        public Propellant GetPropellant(double ratio, bool drawStackGauge = false, bool ignoreForIsp = false)
         {
             return PropellantConfigUtils.GetPropellant(ResourceName, ratio, drawStackGauge, ignoreForIsp);
         }
@@ -30,7 +30,7 @@ namespace Ignition
 
     public static class PropellantConfigUtils
     {
-        public static Propellant GetPropellant(string resourceName, float ratio, bool drawStackGauge = false, bool ignoreForIsp = false)
+        public static Propellant GetPropellant(string resourceName, double ratio, bool drawStackGauge = false, bool ignoreForIsp = false)
         {
             var node = new ConfigNode();
             node.name = "PROPELLANT";

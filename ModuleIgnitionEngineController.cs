@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -104,8 +105,8 @@ namespace Ignition
                     if (ignitionResource.Amount == 0 && ignitionResource.ScaledAmount > 0)
                     {
                         var unroundedAmount = ignitionResource.ScaledAmount * GetEngineMassRate();
-                        var powerOfTen = Mathf.Pow(10, Mathf.Floor(Mathf.Log10(unroundedAmount)));
-                        ignitionResource.Amount = powerOfTen * Mathf.Round(unroundedAmount / powerOfTen);
+                        var powerOfTen = Math.Pow(10, Math.Floor(Math.Log10(unroundedAmount)));
+                        ignitionResource.Amount = powerOfTen * Math.Round(unroundedAmount / powerOfTen);
                         IgnitionResourcesDisplayString += "\n  " + ignitionResource.Amount + " " + ignitionResource.ResourceName;
                         if (ignitionResource.AlwaysRequired) IgnitionResourcesDisplayString += " (always consumed)";
                         else IgnitionResourcesDisplayString += " (consumed if necessary)";
@@ -150,8 +151,8 @@ namespace Ignition
         {
             if (ModuleIsNull()) return;
 
-            ModuleEngines.maxThrust = MaxThrustCurrent;
-            ModuleEngines.maxFuelFlow = MaxFuelFlowCurrent;
+            ModuleEngines.maxThrust = (float)MaxThrustCurrent;
+            ModuleEngines.maxFuelFlow = (float)MaxFuelFlowCurrent;
             ModuleEngines.atmosphereCurve.Curve.keys = GetIspKeys();
             ModuleEngines.propellants = GetAllCurrentPropellants(ModuleEngines.propellants);
             ModuleEngines.SetupPropellant();
@@ -171,9 +172,9 @@ namespace Ignition
             }
         }
 
-        protected override float GetG()
+        protected override double GetG()
         {
-            if (ModuleIsNull()) return 9.80665f;
+            if (ModuleIsNull()) return 9.80665;
 
             return ModuleEngines.g;
         }
@@ -185,11 +186,11 @@ namespace Ignition
             return !ModuleEngines.useVelCurve && IspSeaLevelOriginal != -1;
         }
 
-        private float GetEngineMassRate()
+        private double GetEngineMassRate()
         {
             if (ModuleIsNull()) return 0;
 
-            float isp = ModuleEngines.atmosphereCurve.Curve.keys[0].value;
+            double isp = ModuleEngines.atmosphereCurve.Curve.keys[0].value;
             if (!ModuleEngines.useVelCurve) isp = ModuleEngines.atmosphereCurve.Curve.keys[1].value;
             return 1000 * ModuleEngines.maxThrust / (ModuleEngines.g * isp);
         }
@@ -235,9 +236,9 @@ namespace Ignition
 
         private bool ShouldBeIgnited()
         {
-            if ((ModuleEngines.requestedThrottle <= 0.0f) || EngineFlameout() || (ModuleEngines.EngineIgnited == false && ModuleEngines.allowShutdown)) return false;
+            if ((ModuleEngines.requestedThrottle <= 0.0) || EngineFlameout() || (ModuleEngines.EngineIgnited == false && ModuleEngines.allowShutdown)) return false;
 
-            if (!ModuleEngines.EngineIgnited) return vessel.ctrlState.mainThrottle > 0.0f || ModuleEngines.throttleLocked;
+            if (!ModuleEngines.EngineIgnited) return vessel.ctrlState.mainThrottle > 0.0 || ModuleEngines.throttleLocked;
 
             return ModuleEngines.EngineIgnited;
         }
@@ -258,9 +259,9 @@ namespace Ignition
             return false;
         }
 
-        private bool UseIgnitionResource(IgnitionResource ignitionResource, ref float addedIgnitionPotential, ref Dictionary<int, float> resourcesToDrain)
+        private bool UseIgnitionResource(IgnitionResource ignitionResource, ref double addedIgnitionPotential, ref Dictionary<int, double> resourcesToDrain)
         {
-            double resourceAmount = 0f;
+            double resourceAmount = 0.0;
             int resourceId = PartResourceLibrary.Instance.GetDefinition(ignitionResource.ResourceName).id;
             part?.GetConnectedResourceTotals(resourceId, out resourceAmount, out double resourceMaxAmount);
 
@@ -286,8 +287,8 @@ namespace Ignition
             }
 
             // Always use any required ignition resources
-            var addedIgnitionPotential = 0f;
-            Dictionary<int, float> resourcesToDrain = new Dictionary<int, float>();
+            var addedIgnitionPotential = 0.0;
+            Dictionary<int, double> resourcesToDrain = new Dictionary<int, double>();
             var missingResources = new List<string>();
             foreach (var ignitionResource in IgnitionResources)
             {
@@ -307,8 +308,8 @@ namespace Ignition
             if (missingResources.Count == 0)
             {
                 // Compute ignition potential of propellant combination
-                var ignitionThreshold = 0.999f; // A bit less than 1 to allow for precision issues
-                var ignitionPotential = 1f;
+                var ignitionThreshold = 0.999; // A bit less than 1 to allow for precision issues
+                var ignitionPotential = 1.0;
                 if (!ignitionAchieved)
                 {
                     var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
@@ -318,12 +319,12 @@ namespace Ignition
                         var propellantConfig = new PropellantConfig(propellantConfigNode);
                         propellantConfigs[propellantConfig.ResourceName] = propellantConfig;
                     }
-                    var totalRatio = 0f;
+                    var totalRatio = 0.0;
                     foreach (var propellant in ModuleEngines.propellants) totalRatio += propellant.ratio;
                     foreach (var propellant in ModuleEngines.propellants)
                     {
                         if (!propellantConfigs.ContainsKey(propellant.name)) continue;
-                        ignitionPotential *= Mathf.Pow(propellantConfigs[propellant.name].IgnitionPotential, propellant.ratio / totalRatio);
+                        ignitionPotential *= Math.Pow(propellantConfigs[propellant.name].IgnitionPotential, propellant.ratio / totalRatio);
                     }
                     ignitionPotential += addedIgnitionPotential;
                     ignitionAchieved = ignitionPotential > ignitionThreshold;
@@ -363,7 +364,7 @@ namespace Ignition
             return ignitionAchieved;
         }
 
-        protected override float GetScaledMaxThrustOriginal()
+        protected override double GetScaledMaxThrustOriginal()
         {
             return GetScale(EngineThrustScaleExponent) * MaxThrustOriginal;
         }

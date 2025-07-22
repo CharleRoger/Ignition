@@ -9,29 +9,29 @@ namespace Ignition
         [SerializeField]
         public string ResourceName = null;
         [SerializeField]
-        public float Amount = 0;
+        public double Amount = 0;
         [SerializeField]
-        public float ScaledAmount = 0;
+        public double ScaledAmount = 0;
         [SerializeField]
-        public float AddedIgnitionPotential = 1;
+        public double AddedIgnitionPotential = 1;
         [SerializeField]
         public bool AlwaysRequired = false;
 
         public void Load(ConfigNode node)
         {
             ResourceName = node.GetValue("name");
-            if (node.HasValue("Amount")) Amount = Mathf.Max(0.0f, float.Parse(node.GetValue("Amount")));
-            if (node.HasValue("ScaledAmount")) ScaledAmount = Mathf.Max(0.0f, float.Parse(node.GetValue("ScaledAmount")));
-            if (node.HasValue("AddedIgnitionPotential")) AddedIgnitionPotential = Mathf.Max(0.0f, float.Parse(node.GetValue("AddedIgnitionPotential")));
+            if (node.HasValue("Amount")) Amount = Math.Max(0.0, double.Parse(node.GetValue("Amount")));
+            if (node.HasValue("ScaledAmount")) ScaledAmount = Math.Max(0.0, double.Parse(node.GetValue("ScaledAmount")));
+            if (node.HasValue("AddedIgnitionPotential")) AddedIgnitionPotential = Math.Max(0.0, double.Parse(node.GetValue("AddedIgnitionPotential")));
             if (node.HasValue("AlwaysRequired")) AlwaysRequired = bool.Parse(node.GetValue("AlwaysRequired"));
         }
 
         public void Save(ConfigNode node)
         {
             node.AddValue("name", ResourceName);
-            node.AddValue("Amount", Mathf.Max(0.0f, Amount));
-            node.AddValue("ScaledAmount", Mathf.Max(0.0f, ScaledAmount));
-            node.AddValue("AddedIgnitionPotential", Mathf.Max(0.0f, AddedIgnitionPotential));
+            node.AddValue("Amount", Math.Max(0.0, Amount));
+            node.AddValue("ScaledAmount", Math.Max(0.0, ScaledAmount));
+            node.AddValue("AddedIgnitionPotential", Math.Max(0.0, AddedIgnitionPotential));
             node.AddValue("AlwaysRequired", AlwaysRequired);
         }
 
@@ -49,9 +49,9 @@ namespace Ignition
             var values = split[1].Split('/');
 
             ignitionResource.ResourceName = split[0];
-            ignitionResource.Amount = float.Parse(values[0]);
-            ignitionResource.ScaledAmount = float.Parse(values[1]);
-            ignitionResource.AddedIgnitionPotential = float.Parse(values[2]);
+            ignitionResource.Amount = double.Parse(values[0]);
+            ignitionResource.ScaledAmount = double.Parse(values[1]);
+            ignitionResource.AddedIgnitionPotential = double.Parse(values[2]);
             ignitionResource.AlwaysRequired = bool.Parse(values[3]);
 
             return ignitionResource;
