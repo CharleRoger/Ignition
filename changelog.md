@@ -1,3 +1,5 @@
+# 1.2.0
+- Added TweakScale compatibility
 # 1.1.4
 - Restricted `ModuleIgnitionTankController` to only add its configured resources to its host part in the editor
   - Fixes various issues which keep arising with resource amounts not being properly maintained

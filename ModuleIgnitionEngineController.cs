@@ -1,5 +1,4 @@
-﻿using CommNet.Network;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -100,6 +99,8 @@ namespace Ignition
                 foreach (var requiredResourceString in IgnitionResourcesString.Split(';'))
                 {
                     var ignitionResource = IgnitionResource.FromString(requiredResourceString);
+                    ignitionResource.Amount *= GetScale(EngineThrustScaleExponent);
+                    ignitionResource.ScaledAmount *= GetScale(EngineThrustScaleExponent);
                     if (ignitionResource.Amount == 0 && ignitionResource.ScaledAmount > 0)
                     {
                         var unroundedAmount = ignitionResource.ScaledAmount * GetEngineMassRate();
@@ -360,6 +361,11 @@ namespace Ignition
             else message = "Ignition failed — Ignitor was insufficient";
 
             return ignitionAchieved;
+        }
+
+        protected override float GetScaledMaxThrustOriginal()
+        {
+            return GetScale(EngineThrustScaleExponent) * MaxThrustOriginal;
         }
     }
 }

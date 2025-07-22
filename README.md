@@ -9,6 +9,7 @@ Ignition is a plugin for Kerbal Space Program which provides a simple framework 
 - Monopropellant fuel tanks, engines and RCS thrusters
 - Bipropellant fuel tanks, engines and RCS thrusters
 - Jet engines
+- TweakScale support
 ### Planned
 - Tripropellants and more
 
@@ -95,6 +96,7 @@ IgnitionPropellantCombinationConfig
 Controller modules are used to modify engine modules, RCS modules, and resources on a part. Each type of controller module can be configured with the following fields:
 - `moduleID` = Unique id of this module.
 - `propellantModuleID` = Unique id of a `ModuleIgnitionPropellant` used by this controller module (see below). Any number of `propellantModuleID` fields is allowed.
+- `ScaleExponent`: Exponent used to compute volume/thrust scaling for TweakScale. Default values are set to the TweakScale defaults, 3 for tank volume and 2.5 for engine and RCS thrust.
 
 #### ModuleIgnitionEngineController
 Controls propellant combinations and ignition simulation for a `ModuleEngines` with the following fields:
@@ -228,6 +230,9 @@ MODULE
 
 ## Dependencies
 - [ModuleManager (4.2.3)](https://github.com/sarbian/ModuleManager)
+
+## Compatibility
+- [TweakScaleRescaled (3.2.4)](https://github.com/JonnyOThan/TweakScale)
 
 ## License
 Distributed under the GNU General Public License.

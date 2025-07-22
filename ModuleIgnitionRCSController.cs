@@ -84,5 +84,10 @@ namespace Ignition
         {
             return true;
         }
+
+        protected override float GetScaledMaxThrustOriginal()
+        {
+            return GetScale(RCSThrustScaleExponent) * MaxThrustOriginal;
+        }
     }
 }

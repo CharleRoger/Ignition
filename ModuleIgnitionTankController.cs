@@ -7,9 +7,11 @@ namespace Ignition
     {
         [KSPField(isPersistant = true)]
         public float volume = 0;
+        private float VolumeScaled => GetScale(VolumeScaleExponent) * volume;
 
         [KSPField(isPersistant = true)]
         public float addedMass = 0;
+        public float AddedMassScaled => GetScale(MassScaleExponent) * addedMass;
 
         [KSPField(isPersistant = true)]
         public float currentAddedMass = 0;
@@ -18,34 +20,25 @@ namespace Ignition
 
         [KSPField(isPersistant = true)]
         public float addedCost = 0;
+        public float AddedCostScaled => GetScale(CostScaleExponent) * addedCost;
 
         [KSPField(isPersistant = true)]
         public float currentAddedCost = 0;
         public float GetModuleCost(float baseCost, ModifierStagingSituation situation) => currentAddedCost;
         public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.FIXED;
 
-        public override void OnLoad(ConfigNode node)
-        {
-            base.OnLoad(node);
-        }
-
-        public override void UpdateAndApply(bool initialSetup)
-        {
-            if (!HighLogic.LoadedSceneIsEditor) return;
-
-            UnapplyPropellantConfig();
-            UpdatePropellantConfigs();
-            ApplyPropellantConfig();
-        }
-
         public override void OnStart(StartState state)
         {
             UpdatePropellantConfigs();
+            RemoveZeroResources();
+        }
 
+        private void RemoveZeroResources()
+        {
             var resourcesToRemove = new List<string>();
             foreach (var resource in part.Resources)
             {
-                if (resource.maxAmount <= 1e-6) resourcesToRemove.Add(resource.resourceName);
+                if (resource.maxAmount <= 1e-3) resourcesToRemove.Add(resource.resourceName);
             }
             foreach (var resourceName in resourcesToRemove) part.RemoveResource(resourceName);
         }
@@ -102,17 +95,17 @@ namespace Ignition
 
         private void AddOrRemoveConfiguredPropellant(bool addNotRemove)
         {
-            currentAddedMass = addedMass;
-            currentAddedCost = addedCost;
+            currentAddedMass = AddedMassScaled;
+            currentAddedCost = AddedCostScaled;
+            var addedVolume = addNotRemove ? VolumeScaled : -VolumeScaled;
 
             if (PropellantConfigCurrent is null || PropellantConfigCurrent.Propellants.Count == 0)
             {
-                currentAddedMass += GetTankMass(volume, 0.001f);
+                currentAddedMass += GetTankMass(addedVolume, 0.001f);
                 return;
             }
 
             var totalRatio = 0f;
-            var addedVolume = addNotRemove ? volume : -volume;
             foreach (var propellant in PropellantConfigCurrent.Propellants) totalRatio += propellant.ratio;
             foreach (var propellant in PropellantConfigCurrent.Propellants) AddResource(propellant.name, addedVolume * propellant.ratio / totalRatio);
         }
@@ -125,6 +118,12 @@ namespace Ignition
         public override void ApplyPropellantConfig()
         {
             AddOrRemoveConfiguredPropellant(true);
+            RemoveZeroResources();
+        }
+
+        public override bool ShouldUpdateAndApply()
+        {
+            return HighLogic.LoadedSceneIsEditor;
         }
 
         public override string GetInfo()
