@@ -38,7 +38,7 @@ namespace Ignition
             var resourcesToRemove = new List<string>();
             foreach (var resource in part.Resources)
             {
-                if (resource.maxAmount < 1e-6) resourcesToRemove.Add(resource.resourceName);
+                if (resource.maxAmount < 1e-5 * VolumeScaled) resourcesToRemove.Add(resource.resourceName);
             }
             foreach (var resourceName in resourcesToRemove) part.RemoveResource(resourceName);
         }
