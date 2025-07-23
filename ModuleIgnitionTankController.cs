@@ -56,14 +56,18 @@ namespace Ignition
             return volume * Math.Round(2500000 * Math.Pow(resourceDensity, 2 / 3.0)) / 200000000;
         }
 
-        private void AddResource(string resourceName, double addedVolume)
+        private void AddOrRemoveResource(string resourceName, double volumeFraction, bool addNotRemove)
         {
             var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(resourceName);
             var unitVolume = GetUnitVolume(resourceName);
             var density = resourceDefinition.density / unitVolume;
 
+            var addedVolume = addNotRemove ? volume : -volume;
+            addedVolume *= volumeFraction;
+            var addedVolumeScaled = addedVolume * GetScale(VolumeScaleExponent);
+
             var addedAmount = double.MaxValue;
-            var addedMaxAmount = addedVolume / unitVolume;
+            var addedMaxAmount = addedVolumeScaled / unitVolume;
 
             var totalAmount = addedAmount;
             var totalMaxAmount = addedMaxAmount;
@@ -78,8 +82,11 @@ namespace Ignition
                 totalMaxAmount += previousMaxAmount;
             }
 
-            currentAddedMass += GetTankMass(addedVolume, density);
-            currentAddedCost += addedMaxAmount * resourceDefinition.unitCost;
+            if (addNotRemove)
+            {
+                currentAddedMass += GetTankMass(addedVolume, density);
+                //currentAddedCost += addedMaxAmount * resourceDefinition.unitCost / GetScale(CostScaleExponent);
+            }
 
             if (totalAmount < 0) totalAmount = 0;
             if (totalMaxAmount < 0) totalMaxAmount = 0;
@@ -93,21 +100,26 @@ namespace Ignition
             part.SetResource(resourceNode);
         }
 
+        public override void ScaleMassAndCost()
+        {
+            currentAddedMass *= GetScale(MassScaleExponent);
+            currentAddedCost *= GetScale(CostScaleExponent);
+        }
+
         private void AddOrRemoveConfiguredPropellant(bool addNotRemove)
         {
-            currentAddedMass = AddedMassScaled;
-            currentAddedCost = AddedCostScaled;
-            var addedVolume = addNotRemove ? VolumeScaled : -VolumeScaled;
-
             if (PropellantConfigCurrent is null || PropellantConfigCurrent.Propellants.Count == 0)
             {
-                currentAddedMass += GetTankMass(addedVolume, 0.001);
+                currentAddedMass = 0;
                 return;
             }
 
+            currentAddedMass = addedMass;
+            //currentAddedCost = addedCost;
+
             var totalRatio = 0.0;
             foreach (var propellant in PropellantConfigCurrent.Propellants) totalRatio += propellant.ratio;
-            foreach (var propellant in PropellantConfigCurrent.Propellants) AddResource(propellant.name, addedVolume * propellant.ratio / totalRatio);
+            foreach (var propellant in PropellantConfigCurrent.Propellants) AddOrRemoveResource(propellant.name, propellant.ratio / totalRatio, addNotRemove);
         }
 
         public override void UnapplyPropellantConfig()

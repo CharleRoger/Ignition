@@ -19,11 +19,13 @@ namespace Ignition
         public double ScaleFactor = 1;
         private Dictionary<string, double> ScaleExponents = new Dictionary<string, double>();
 
-        protected const string MassScaleExponent = "mass";
-        protected const string CostScaleExponent = "cost";
-        protected const string VolumeScaleExponent = "tank";
-        protected const string EngineThrustScaleExponent = "engine";
-        protected const string RCSThrustScaleExponent = "rcs";
+        private const string MassScaleExponent = "mass";
+        private const string CostScaleExponent = "cost";
+        private const string VolumeScaleExponent = "tank";
+        private const string EngineThrustScaleExponent = "engine";
+        private const string RCSThrustScaleExponent = "rcs";
+
+        public virtual void ScaleMassAndCost() {}
 
         public virtual void UnapplyPropellantConfig() {}
 

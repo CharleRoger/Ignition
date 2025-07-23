@@ -30,7 +30,11 @@
 
             foreach (var controllerModule in part.FindModulesImplementing<ModuleIgnitionController>())
             {
-                if (controllerModule.IsConnectedToPropellantModule(moduleID)) controllerModule.UpdateAndApply(false);
+                if (controllerModule.IsConnectedToPropellantModule(moduleID))
+                {
+                    controllerModule.UpdateAndApply(false);
+                    controllerModule.ScaleMassAndCost();
+                }
             }
         }
     }
