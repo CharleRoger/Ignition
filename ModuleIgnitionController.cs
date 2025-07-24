@@ -19,13 +19,11 @@ namespace Ignition
         public double ScaleFactor = 1;
         private Dictionary<string, double> ScaleExponents = new Dictionary<string, double>();
 
-        private const string MassScaleExponent = "mass";
-        private const string CostScaleExponent = "cost";
-        private const string VolumeScaleExponent = "tank";
-        private const string EngineThrustScaleExponent = "engine";
-        private const string RCSThrustScaleExponent = "rcs";
-
-        public virtual void ScaleMassAndCost() {}
+        protected const string MassScaleExponent = "mass";
+        protected const string CostScaleExponent = "cost";
+        protected const string VolumeScaleExponent = "tank";
+        protected const string EngineThrustScaleExponent = "engine";
+        protected const string RCSThrustScaleExponent = "rcs";
 
         public virtual void UnapplyPropellantConfig() {}
 
@@ -119,14 +117,9 @@ namespace Ignition
             ApplyPropellantConfig();
         }
 
-        public bool ShouldCheckForUpdateScaleFactor()
-        {
-            return HighLogic.LoadedSceneIsEditor;
-        }
-
         public void Update()
         {
-            if (!ShouldCheckForUpdateScaleFactor()) return;
+            if (!HighLogic.LoadedSceneIsEditor) return;
 
             UpdateScaleFactor();
             if (ScaleFactor != ScaleFactorPrevious)

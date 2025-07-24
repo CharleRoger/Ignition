@@ -8,24 +8,23 @@ namespace Ignition
         [KSPField(isPersistant = true)]
         public double volume = 0;
         private double VolumeScaled => GetScale(VolumeScaleExponent) * volume;
+        private double VolumeResolution => 1e-5 * VolumeScaled;
 
         [KSPField(isPersistant = true)]
         public double addedMass = 0;
-        public double AddedMassScaled => GetScale(MassScaleExponent) * addedMass;
 
         [KSPField(isPersistant = true)]
         public double currentAddedMass = 0;
         public float GetModuleMass(float baseMass, ModifierStagingSituation situation) => (float)currentAddedMass;
-        public ModifierChangeWhen GetModuleMassChangeWhen() => ModifierChangeWhen.FIXED;
+        public ModifierChangeWhen GetModuleMassChangeWhen() => ModifierChangeWhen.CONSTANTLY;
 
         [KSPField(isPersistant = true)]
         public double addedCost = 0;
-        public double AddedCostScaled => GetScale(CostScaleExponent) * addedCost;
 
         [KSPField(isPersistant = true)]
         public double currentAddedCost = 0;
         public float GetModuleCost(float baseCost, ModifierStagingSituation situation) => (float)currentAddedCost;
-        public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.FIXED;
+        public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.CONSTANTLY;
 
         public override void OnStart(StartState state)
         {
@@ -38,7 +37,7 @@ namespace Ignition
             var resourcesToRemove = new List<string>();
             foreach (var resource in part.Resources)
             {
-                if (resource.maxAmount < 1e-5 * VolumeScaled) resourcesToRemove.Add(resource.resourceName);
+                if (resource.maxAmount < VolumeResolution) resourcesToRemove.Add(resource.resourceName);
             }
             foreach (var resourceName in resourcesToRemove) part.RemoveResource(resourceName);
         }
@@ -63,59 +62,39 @@ namespace Ignition
             var density = resourceDefinition.density / unitVolume;
 
             var addedVolume = addNotRemove ? volume : -volume;
-            addedVolume *= volumeFraction;
-            var addedVolumeScaled = addedVolume * GetScale(VolumeScaleExponent);
+            addedVolume *= volumeFraction * GetScale(VolumeScaleExponent);
 
-            var addedAmount = double.MaxValue;
-            var addedMaxAmount = addedVolumeScaled / unitVolume;
-
-            var totalAmount = addedAmount;
-            var totalMaxAmount = addedMaxAmount;
-
-            if (part.Resources.Contains(resourceName))
-            {
-                var resource = part.Resources.Get(resourceName);
-                var previousAmount = resource.amount;
-                var previousMaxAmount = resource.maxAmount;
-
-                if (previousAmount < previousMaxAmount) totalAmount = previousAmount;
-                totalMaxAmount += previousMaxAmount;
-            }
+            var addedAmount = addedVolume / unitVolume;
 
             if (addNotRemove)
             {
-                currentAddedMass += GetTankMass(addedVolume, density);
-                //currentAddedCost += addedMaxAmount * resourceDefinition.unitCost / GetScale(CostScaleExponent);
+                // Set unscaled values because TweakScale will handle them afterwards
+                currentAddedMass += GetTankMass(addedVolume, density) / GetScale(MassScaleExponent);
+                currentAddedCost += addedAmount * resourceDefinition.unitCost / GetScale(CostScaleExponent);
             }
 
+            var totalAmount = addedAmount;
+            if (part.Resources.Contains(resourceName)) totalAmount += part.Resources.Get(resourceName).maxAmount;
             if (totalAmount < 0) totalAmount = 0;
-            if (totalMaxAmount < 0) totalMaxAmount = 0;
-            if (totalAmount > totalMaxAmount) totalAmount = totalMaxAmount;
 
             var resourceNode = new ConfigNode();
             resourceNode.name = "RESOURCE";
             resourceNode.AddValue("name", resourceName);
             resourceNode.AddValue("amount", totalAmount);
-            resourceNode.AddValue("maxAmount", totalMaxAmount);
+            resourceNode.AddValue("maxAmount", totalAmount);
             part.SetResource(resourceNode);
-        }
-
-        public override void ScaleMassAndCost()
-        {
-            currentAddedMass *= GetScale(MassScaleExponent);
-            currentAddedCost *= GetScale(CostScaleExponent);
         }
 
         private void AddOrRemoveConfiguredPropellant(bool addNotRemove)
         {
+            currentAddedMass = addedMass;
+            currentAddedCost = addedCost;
+
             if (PropellantConfigCurrent is null || PropellantConfigCurrent.Propellants.Count == 0)
             {
                 currentAddedMass = 0;
                 return;
             }
-
-            currentAddedMass = addedMass;
-            //currentAddedCost = addedCost;
 
             var totalRatio = 0.0;
             foreach (var propellant in PropellantConfigCurrent.Propellants) totalRatio += propellant.ratio;
