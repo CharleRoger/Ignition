@@ -133,7 +133,7 @@ namespace Ignition
 
         public double GetScale(string key)
         {
-            return ScaleExponents.ContainsKey(key) ? Math.Pow(ScaleFactor, ScaleExponents[key]) : 0;
+            return ScaleExponents.ContainsKey(key) ? Math.Pow(ScaleFactor, ScaleExponents[key]) : 1;
         }
 
         public bool IsConnectedToPropellantModule(string moduleID)

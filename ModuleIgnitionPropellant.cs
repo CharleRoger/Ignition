@@ -28,22 +28,20 @@
 
             if (resourceNameOriginal is null) resourceNameOriginal = resourceName;
 
-            PartModule tweakScaleModule = null;
-            foreach (var module in part.Modules)
-            {
-                if (module.ClassName == "TweakScale" && module.Fields.GetValue<bool>("moduleIsEnabled"))
-                {
-                    tweakScaleModule = module;
-                    break;
-                }
-            }
-
             foreach (var controllerModule in part.FindModulesImplementing<ModuleIgnitionController>())
             {
-                if (controllerModule.IsConnectedToPropellantModule(moduleID))
+                if (controllerModule.IsConnectedToPropellantModule(moduleID)) controllerModule.UpdateAndApply(false);
+            }
+
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                foreach (var module in part.Modules)
                 {
-                    controllerModule.UpdateAndApply(false);
-                    if (!(tweakScaleModule is null)) tweakScaleModule.OnStart(StartState.Editor);
+                    if (module.ClassName == "TweakScale" && module.Fields.GetValue<bool>("moduleIsEnabled"))
+                    {
+                        module.OnStart(StartState.Editor);
+                        break;
+                    }
                 }
             }
         }
