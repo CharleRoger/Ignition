@@ -32,6 +32,18 @@
             {
                 if (controllerModule.IsConnectedToPropellantModule(moduleID)) controllerModule.UpdateAndApply(false);
             }
+
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                foreach (var module in part.Modules)
+                {
+                    if (module.ClassName == "TweakScale" && module.Fields.GetValue<bool>("moduleIsEnabled"))
+                    {
+                        module.OnStart(StartState.Editor);
+                        break;
+                    }
+                }
+            }
         }
     }
 

@@ -117,14 +117,9 @@ namespace Ignition
             ApplyPropellantConfig();
         }
 
-        public bool ShouldCheckForUpdateScaleFactor()
-        {
-            return HighLogic.LoadedSceneIsEditor;
-        }
-
         public void Update()
         {
-            if (!ShouldCheckForUpdateScaleFactor()) return;
+            if (!HighLogic.LoadedSceneIsEditor) return;
 
             UpdateScaleFactor();
             if (ScaleFactor != ScaleFactorPrevious)
@@ -138,7 +133,7 @@ namespace Ignition
 
         public double GetScale(string key)
         {
-            return ScaleExponents.ContainsKey(key) ? Math.Pow(ScaleFactor, ScaleExponents[key]) : 0;
+            return ScaleExponents.ContainsKey(key) ? Math.Pow(ScaleFactor, ScaleExponents[key]) : 1;
         }
 
         public bool IsConnectedToPropellantModule(string moduleID)
