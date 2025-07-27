@@ -38,9 +38,10 @@
     <Compile Include="ModuleIgnitionRCSController.cs" />
     <Compile Include="ModuleIgnitionTankController.cs" />
     <Compile Include="ModuleIgnitionThrusterController.cs" />
+    <Compile Include="PropellantConfig.cs" />
     <Compile Include="PropellantCombinationConfig.cs" />
     <Compile Include="PropellantConfigBase.cs" />
-    <Compile Include="PropellantConfig.cs" />
+    <Compile Include="PropellantConfigUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

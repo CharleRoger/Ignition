@@ -7,6 +7,7 @@ namespace Ignition
         public virtual double ThrustMultiplier { get; protected set; } = 1;
         public virtual double IspMultiplier { get; protected set; } = 1;
         public virtual double IgnitionPotential { get; protected set; } = 1;
+        public virtual double TankDensity { get; protected set; } = 0;
         public List<Propellant> Propellants { get; protected set; } = new List<Propellant>();
 
         public PropellantConfigBase()
@@ -19,6 +20,7 @@ namespace Ignition
             if (node.HasValue("ThrustMultiplier")) ThrustMultiplier = double.Parse(node.GetValue("ThrustMultiplier"));
             if (node.HasValue("IspMultiplier")) IspMultiplier = double.Parse(node.GetValue("IspMultiplier"));
             if (node.HasValue("IgnitionPotential")) IgnitionPotential = double.Parse(node.GetValue("IgnitionPotential"));
+            if (node.HasValue("TankDensity")) TankDensity = double.Parse(node.GetValue("TankDensity"));
         }
     }
 }

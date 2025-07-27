@@ -93,6 +93,39 @@ namespace Ignition
             }
         }
 
+        private double _tankDensity = 0;
+        public override double TankDensity
+        {
+            get
+            {
+                if (_tankDensity == 0 && TotalPropellantRatio > 0)
+                {
+                    _tankDensity = 0.0;
+                    foreach (var propellant in Propellants)
+                    {
+                        if (propellant.ignoreForIsp) continue;
+
+                        var tankDensity = PropellantConfigs[propellant.name].TankDensity;
+                        if (tankDensity == 0)
+                        {
+                            var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(propellant.name);
+                            var unitVolume = PropellantConfigUtils.GetUnitVolume(propellant.name);
+                            var density = resourceDefinition.density / unitVolume;
+                            tankDensity = PropellantConfigUtils.GetTankDensity(density);
+                        }
+
+                        _tankDensity += tankDensity * propellant.ratio / TotalPropellantRatio;
+                    }
+                }
+
+                return _tankDensity;
+            }
+            protected set
+            {
+                _tankDensity = value;
+            }
+        }
+
         private Dictionary<string, PropellantConfig> _propellantConfigs = null;
         private Dictionary<string, PropellantConfig> PropellantConfigs
         {

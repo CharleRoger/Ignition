@@ -42,34 +42,19 @@ namespace Ignition
             foreach (var resourceName in resourcesToRemove) part.RemoveResource(resourceName);
         }
 
-        private double GetUnitVolume(string resourceName)
-        {
-            if (resourceName == "LiquidFuel") return 5;
-            if (resourceName == "Oxidizer") return 5;
-            if (resourceName == "MonoPropellant") return 4;
-            return 1;
-        }
-
-        private double GetTankMass(double volume, double resourceDensity)
-        {
-            return volume * Math.Round(2500000 * Math.Pow(resourceDensity, 2 / 3.0)) / 200000000;
-        }
-
-        private void AddOrRemoveResource(string resourceName, double volumeFraction, bool addNotRemove)
+        private void AddOrRemoveResource(string resourceName, double volumeFraction, double tankDensity, bool addNotRemove)
         {
             var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(resourceName);
-            var unitVolume = GetUnitVolume(resourceName);
-            var density = resourceDefinition.density / unitVolume;
 
             var addedVolume = addNotRemove ? volume : -volume;
             addedVolume *= volumeFraction * GetScale(VolumeScaleExponent);
 
-            var addedAmount = addedVolume / unitVolume;
+            var addedAmount = addedVolume / PropellantConfigUtils.GetUnitVolume(resourceName);
 
             if (addNotRemove)
             {
                 // Set unscaled values because TweakScale will handle them afterwards
-                currentAddedMass += GetTankMass(addedVolume, density) / GetScale(MassScaleExponent);
+                currentAddedMass += addedVolume * tankDensity / GetScale(MassScaleExponent);
                 currentAddedCost += addedAmount * resourceDefinition.unitCost / GetScale(CostScaleExponent);
             }
 
@@ -98,7 +83,7 @@ namespace Ignition
 
             var totalRatio = 0.0;
             foreach (var propellant in PropellantConfigCurrent.Propellants) totalRatio += propellant.ratio;
-            foreach (var propellant in PropellantConfigCurrent.Propellants) AddOrRemoveResource(propellant.name, propellant.ratio / totalRatio, addNotRemove);
+            foreach (var propellant in PropellantConfigCurrent.Propellants) AddOrRemoveResource(propellant.name, propellant.ratio / totalRatio, PropellantConfigCurrent.TankDensity, addNotRemove);
         }
 
         public override void UnapplyPropellantConfig()
