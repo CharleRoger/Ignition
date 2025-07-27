@@ -9,7 +9,7 @@ Ignition is a plugin for Kerbal Space Program which provides a simple framework 
 - Monopropellant fuel tanks, engines and RCS thrusters
 - Bipropellant fuel tanks, engines and RCS thrusters
 - Jet engines
-- TweakScale support
+- Compatible with B9PartSwitch and TweakScale
 ### Planned
 - Tripropellants and more
 
@@ -22,6 +22,7 @@ Any resource used as a propellant by Ignition requires a `IgnitionPropellantConf
 - `ThrustMultiplier`: Vacuum thrust multiplier, scaled by proportion in a bipropellant mixture.
 - `IspMultiplier`: Vacuum Isp multiplier, scaled by proportion in a bipropellant mixture.
 - `IgnitionPotential`: A dimensionless quantity representing how readily the propellant will ignite with another, scaled by proportion in a bipropellant mixture.
+- `TankDensity`: The dry mass density of a tank containg only this resource in tons per litre. If not specified, a sensible density is internally computed from the resource density.
 
 For example, consider the following set of three propellants:
 ```
@@ -71,6 +72,7 @@ The automatic computation of propellant combinations described above can be over
 - `ThrustMultiplier`: Total vacuum thrust multiplier.
 - `IspMultiplier`: Total Isp thrust multiplier.
 - `IgnitionPotential`: Total ignition potential.
+- `TankDensity`: Total tank density.
 
 ```
 IgnitionPropellantCombinationConfig
@@ -232,6 +234,8 @@ MODULE
 - [ModuleManager (4.2.3)](https://github.com/sarbian/ModuleManager)
 
 ## Compatibility
+Ignition modules are designed to be compatible with modules from the following plugins:
+- [B9PartSwitch (2.21.0.1)](https://github.com/KSPModStewards/B9PartSwitch)
 - [TweakScaleRescaled (3.2.4)](https://github.com/JonnyOThan/TweakScale)
 
 ## License
