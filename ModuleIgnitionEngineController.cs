@@ -79,9 +79,16 @@ namespace Ignition
             return ModuleEngines is null;
         }
 
-        protected override string GetGroupName()
+        protected override string GetGuiGroupName()
         {
             return IsMultiModeEngine ? "Engine mode \"" + engineID + "\"" : "Engine";
+        }
+
+        protected override List<Propellant> GetModulePropellants()
+        {
+            if (ModuleIsNull()) return new List<Propellant>();
+
+            return ModuleEngines.propellants;
         }
 
         protected override void SetupOriginalData()
@@ -115,27 +122,17 @@ namespace Ignition
                 }
             }
 
-            if (PropellantNodeResourceNames is null && !(ModuleEngines.propellants is null))
-            {
-                PropellantNodeResourceNames = "";
-                for (int i = 0; i < ModuleEngines.propellants.Count; i++)
-                {
-                    PropellantNodeResourceNames += ModuleEngines.propellants[i].name;
-                    if (i != ModuleEngines.propellants.Count - 1) PropellantNodeResourceNames += ";";
-                }
-            }
-
             if (ModuleEngines.atmosphereCurve.Curve.keys.Length == 0) return;
             if (MaxThrustOriginal == 0) MaxThrustOriginal = ModuleEngines.maxThrust;
             if (IspVacuumOriginal == 0) IspVacuumOriginal = GetKeyframeValue(ModuleEngines.atmosphereCurve.Curve.keys, 0);
             if (IspSeaLevelOriginal == 0) IspSeaLevelOriginal = GetKeyframeValue(ModuleEngines.atmosphereCurve.Curve.keys, 1);
         }
 
-        protected override void SetupInfoStrings()
+        protected override void SetInfoStrings()
         {
-            base.SetupInfoStrings();
+            base.SetInfoStrings();
 
-            var groupName = GetGroupName();
+            var groupName = GetGuiGroupName();
             Fields["IgnitionResourcesDisplayString"].group.name = groupName;
             Fields["IgnitionResourcesDisplayString"].group.displayName = groupName;
 

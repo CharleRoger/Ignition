@@ -26,10 +26,25 @@ namespace Ignition
         public float GetModuleCost(float baseCost, ModifierStagingSituation situation) => (float)currentAddedCost;
         public ModifierChangeWhen GetModuleCostChangeWhen() => ModifierChangeWhen.CONSTANTLY;
 
+        [KSPField(guiName = "<b>Resources</b>")]
+        [UI_Label(scene = UI_Scene.All)]
+        public string ResourcesString = "";
+
         public override void OnStart(StartState state)
         {
             UpdatePropellantConfigs();
             RemoveZeroResources();
+        }
+
+        protected override void SetInfoStrings()
+        {
+            bool isActive = DisplayGuiStrings();
+            Fields["ResourcesString"].guiActiveEditor = isActive;
+            Fields["ResourcesString"].guiActive = isActive;
+
+            if (!isActive) return;
+
+            ResourcesString = PropellantConfigUtils.GetPropellantRatiosString(PropellantConfigCurrent.Propellants);
         }
 
         private void RemoveZeroResources()

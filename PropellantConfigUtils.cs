@@ -125,5 +125,57 @@ namespace Ignition
         {
             return Math.Round(2500000 * Math.Pow(resourceDensity, 2 / 3.0)) / 200000000;
         }
+
+        public static string GetPropellantRatiosString(List<Propellant> propellants, List<string> configuredPropellantNames = null)
+        {
+            if (propellants.Count == 0) return "";
+            if (propellants.Count == 1) return propellants[0].resourceDef.displayName;
+
+            var totalRatio = 0.0;
+            foreach (var propellant in propellants) totalRatio += propellant.ratio;
+
+            if (configuredPropellantNames is null)
+            {
+                configuredPropellantNames = new List<string>();
+                foreach (var propellant in propellants) configuredPropellantNames.Add(propellant.name);
+            }
+
+            var multiplier = 1;
+            var totalConfiguredRatio = 0.0;
+            foreach (var propellant in propellants)
+            {
+                if (configuredPropellantNames.Contains(propellant.name)) totalConfiguredRatio += propellant.ratio;
+            }
+
+            for (int d = 1; d < 21; d++)
+            {
+                bool found = true;
+                foreach (var propellant in propellants)
+                {
+                    if (!configuredPropellantNames.Contains(propellant.name)) continue;
+                    if (((propellant.ratio / totalConfiguredRatio * d + 1e-5) % 1) < 2e-5) continue;
+
+                    found = false;
+                    break;
+                }
+                if (found)
+                {
+                    multiplier = d;
+                    break;
+                }
+            }
+
+            var propellantsString = "";
+            for (int i = 0; i < propellants.Count; i++)
+            {
+                var propellant = propellants[i];
+                var ratio = Math.Truncate(1e4 * multiplier * propellant.ratio / totalRatio) / 1e4;
+                if (multiplier > 1 && configuredPropellantNames.Contains(propellant.name)) ratio = Math.Round(ratio);
+                propellantsString += ratio + " " + propellant.resourceDef.displayName;
+                if (i < propellants.Count - 1) propellantsString += " : ";
+            }
+
+            return propellantsString;
+        }
     }
 }

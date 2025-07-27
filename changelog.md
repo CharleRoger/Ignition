@@ -1,6 +1,7 @@
 # 1.2.0
 - Added TweakScale compatibility
 - Added configurable `TankDensity` field to `IgnitionPropellantConfig` and `IgnitionPropellantCombinationConfig` nodes. When this field is not supplied, the tank density is computed from the resource densities as before.
+- Added propellant ratio display in part action window
 - Changed from single (float) to double precision for internal computation
 - Changed sea-level isp computation to ensure it never exceeds the vacuum isp and is more strongly dependent on the thrust multiplier
 - Fixed a couple of bugs surrounding `ModuleIgnitionTankController` added mass and cost

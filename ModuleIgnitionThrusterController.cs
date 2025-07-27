@@ -24,6 +24,10 @@ namespace Ignition
         [KSPField(isPersistant = true)]
         public string PropellantNodeResourceNames = null;
 
+        [KSPField(guiName = "<b>Propellants</b>")]
+        [UI_Label(scene = UI_Scene.All)]
+        public string PropellantsString = "";
+
         [KSPField(guiName = "<b>Thrust</b>")]
         [UI_Label(scene = UI_Scene.All)]
         public string ThrustString = "";
@@ -33,35 +37,75 @@ namespace Ignition
         public string IspString = "";
 
         protected abstract bool ModuleIsNull();
-        protected abstract string GetGroupName();
         protected abstract void SetupOriginalData();
         protected abstract void ApplyPropellantCombinationToModule();
         protected abstract void RecompilePartInfo();
         protected abstract double GetG();
         protected abstract bool UseIspSeaLevel();
         protected abstract double GetScaledMaxThrustOriginal();
+        protected abstract string GetGuiGroupName();
+        protected abstract List<Propellant> GetModulePropellants();
 
-        protected virtual void SetupInfoStrings()
+        protected override bool DisplayGuiStrings()
         {
-            bool isActive = !ModuleIsNull();
+            return base.DisplayGuiStrings() && !ModuleIsNull();
+        }
+
+        protected void SetupPropellantNodeResourceNames()
+        {
+            var propellants = GetModulePropellants();
+            if (PropellantNodeResourceNames is null && !(propellants is null))
+            {
+                PropellantNodeResourceNames = "";
+                for (int i = 0; i < propellants.Count; i++)
+                {
+                    PropellantNodeResourceNames += propellants[i].name;
+                    if (i != propellants.Count - 1) PropellantNodeResourceNames += ";";
+                }
+            }
+        }
+
+        protected override void SetInfoStrings()
+        {
+            bool isActive = DisplayGuiStrings();
+            Fields["PropellantsString"].guiActiveEditor = isActive;
             Fields["ThrustString"].guiActiveEditor = isActive;
             Fields["IspString"].guiActiveEditor = isActive;
+            Fields["PropellantsString"].guiActive = isActive;
             Fields["ThrustString"].guiActive = isActive;
             Fields["IspString"].guiActive = isActive;
 
             if (!isActive) return;
 
-            string groupName = GetGroupName();
+            string groupName = GetGuiGroupName();
+            Fields["PropellantsString"].group.name = groupName;
             Fields["ThrustString"].group.name = groupName;
             Fields["IspString"].group.name = groupName;
+            Fields["PropellantsString"].group.displayName = groupName;
             Fields["ThrustString"].group.displayName = groupName;
             Fields["IspString"].group.displayName = groupName;
+
+            var configuredPropellantNames = new List<string>();
+            foreach (var propellant in PropellantConfigCurrent.Propellants) configuredPropellantNames.Add(propellant.name);
+
+            PropellantsString = PropellantConfigUtils.GetPropellantRatiosString(GetModulePropellants(), configuredPropellantNames);
+
+            if (UseIspSeaLevel())
+            {
+                ThrustString = GetValueString("kN", GetScaledMaxThrustOriginal(), MaxThrustCurrent, MaxThrustCurrent * IspSeaLevelCurrent / IspVacuumCurrent);
+                IspString = GetValueString("s", IspVacuumOriginal, IspVacuumCurrent, IspSeaLevelCurrent);
+            }
+            else
+            {
+                ThrustString = GetValueString("kN", GetScaledMaxThrustOriginal(), MaxThrustCurrent);
+                IspString = GetValueString("s", IspVacuumOriginal, IspVacuumCurrent);
+            }
         }
 
         public override void SetupData()
         {
             SetupOriginalData();
-            SetupInfoStrings();
+            SetupPropellantNodeResourceNames();
         }
 
         protected double GetKeyframeValue(Keyframe[] keyframes, double time)
@@ -112,7 +156,6 @@ namespace Ignition
             if (MaxThrustCurrent == 0) return;
 
             ApplyPropellantCombinationToModule();
-            SetInfoStrings();
         }
 
         protected Keyframe[] GetIspKeys()
@@ -158,22 +201,6 @@ namespace Ignition
             else if (vacuumCurrent < vacuumOriginal) str += " (<color=#FF8888>-" + Math.Round(100 * (1 - vacuumCurrent / vacuumOriginal)) + "</color>%)";
 
             return str;
-        }
-
-        protected void SetInfoStrings()
-        {
-            if (ModuleIsNull()) return;
-
-            if (UseIspSeaLevel())
-            {
-                ThrustString = GetValueString("kN", GetScaledMaxThrustOriginal(), MaxThrustCurrent, MaxThrustCurrent * IspSeaLevelCurrent / IspVacuumCurrent);
-                IspString = GetValueString("s", IspVacuumOriginal, IspVacuumCurrent, IspSeaLevelCurrent);
-            }
-            else
-            {
-                ThrustString = GetValueString("kN", GetScaledMaxThrustOriginal(), MaxThrustCurrent);
-                IspString = GetValueString("s", IspVacuumOriginal, IspVacuumCurrent);
-            }
         }
 
         public override string GetInfo()

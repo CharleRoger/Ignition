@@ -26,10 +26,9 @@ namespace Ignition
         protected const string RCSThrustScaleExponent = "rcs";
 
         public virtual void UnapplyPropellantConfig() {}
-
         public abstract void ApplyPropellantConfig();
-
-        public virtual void SetupData() {}
+        public virtual void SetupData() { }
+        protected abstract void SetInfoStrings();
 
         public ModuleIgnitionController()
         {
@@ -83,6 +82,11 @@ namespace Ignition
             UpdateAndApply(true);
         }
 
+        protected virtual bool DisplayGuiStrings()
+        {
+            return !(PropellantConfigCurrent is null) && PropellantConfigCurrent.Propellants.Count > 0;
+        }
+
         protected void UpdateScaleFactor()
         {
             foreach (var module in part.Modules)
@@ -115,6 +119,7 @@ namespace Ignition
             UpdatePropellantConfigs();
             if (initialSetup) SetupData();
             ApplyPropellantConfig();
+            SetInfoStrings();
         }
 
         public void Update()

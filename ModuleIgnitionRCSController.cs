@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Ignition
 {
@@ -23,24 +24,21 @@ namespace Ignition
             return ModuleRCS is null;
         }
 
-        protected override string GetGroupName()
+        protected override string GetGuiGroupName()
         {
             return "RCS";
+        }
+
+        protected override List<Propellant> GetModulePropellants()
+        {
+            if (ModuleIsNull()) return new List<Propellant>();
+
+            return ModuleRCS.propellants;
         }
 
         protected override void SetupOriginalData()
         {
             if (ModuleIsNull()) return;
-
-            if (PropellantNodeResourceNames is null && !(ModuleRCS.propellants is null))
-            {
-                PropellantNodeResourceNames = "";
-                for (int i = 0; i < ModuleRCS.propellants.Count; i++)
-                {
-                    PropellantNodeResourceNames += ModuleRCS.propellants[i];
-                    if (i != ModuleRCS.propellants.Count - 1) PropellantNodeResourceNames += ";";
-                }
-            }
 
             if (ModuleRCS.atmosphereCurve.Curve.keys.Length == 0) return;
             if (MaxThrustOriginal == 0) MaxThrustOriginal = ModuleRCS.thrusterPower;
