@@ -43,9 +43,9 @@ namespace Ignition
             }
 
             if (ModuleRCS.atmosphereCurve.Curve.keys.Length == 0) return;
-            if (MaxThrustOriginal == -1) MaxThrustOriginal = ModuleRCS.thrusterPower;
-            if (IspVacuumOriginal == -1) IspVacuumOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 0);
-            if (IspSeaLevelOriginal == -1) IspSeaLevelOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 1);
+            if (MaxThrustOriginal == 0) MaxThrustOriginal = ModuleRCS.thrusterPower;
+            if (IspVacuumOriginal == 0) IspVacuumOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 0);
+            if (IspSeaLevelOriginal == 0) IspSeaLevelOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 1);
         }
 
         protected override void ApplyPropellantCombinationToModule()

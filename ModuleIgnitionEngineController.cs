@@ -126,9 +126,9 @@ namespace Ignition
             }
 
             if (ModuleEngines.atmosphereCurve.Curve.keys.Length == 0) return;
-            if (MaxThrustOriginal == -1) MaxThrustOriginal = ModuleEngines.maxThrust;
-            if (IspVacuumOriginal == -1) IspVacuumOriginal = GetKeyframeValue(ModuleEngines.atmosphereCurve.Curve.keys, 0);
-            if (IspSeaLevelOriginal == -1) IspSeaLevelOriginal = GetKeyframeValue(ModuleEngines.atmosphereCurve.Curve.keys, 1);
+            if (MaxThrustOriginal == 0) MaxThrustOriginal = ModuleEngines.maxThrust;
+            if (IspVacuumOriginal == 0) IspVacuumOriginal = GetKeyframeValue(ModuleEngines.atmosphereCurve.Curve.keys, 0);
+            if (IspSeaLevelOriginal == 0) IspSeaLevelOriginal = GetKeyframeValue(ModuleEngines.atmosphereCurve.Curve.keys, 1);
         }
 
         protected override void SetupInfoStrings()
@@ -183,7 +183,7 @@ namespace Ignition
         {
             if (ModuleIsNull()) return false;
 
-            return !ModuleEngines.useVelCurve && IspSeaLevelOriginal != -1;
+            return !ModuleEngines.useVelCurve && IspSeaLevelOriginal != 0;
         }
 
         private double GetEngineMassRate()

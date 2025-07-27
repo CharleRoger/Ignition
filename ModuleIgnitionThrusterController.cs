@@ -8,16 +8,16 @@ namespace Ignition
     abstract class ModuleIgnitionThrusterController : ModuleIgnitionController
     {
         [KSPField(isPersistant = true)]
-        public double MaxThrustOriginal = -1;
-        protected double MaxThrustCurrent = -1;
+        public double MaxThrustOriginal = 0;
+        protected double MaxThrustCurrent = 0;
 
         [KSPField(isPersistant = true)]
-        public double IspVacuumOriginal = -1;
-        protected double IspVacuumCurrent = -1;
+        public double IspVacuumOriginal = 0;
+        protected double IspVacuumCurrent = 0;
 
         [KSPField(isPersistant = true)]
-        public double IspSeaLevelOriginal = -1;
-        protected double IspSeaLevelCurrent = -1;
+        public double IspSeaLevelOriginal = 0;
+        protected double IspSeaLevelCurrent = 0;
 
         protected double MaxFuelFlowCurrent => MaxThrustCurrent / (GetG() * IspVacuumCurrent);
 
@@ -70,7 +70,7 @@ namespace Ignition
             {
                 if (keyframe.time == time) return keyframe.value;
             }
-            return -1;
+            return 0;
         }
 
         private void ComputeNewStats()
@@ -84,21 +84,21 @@ namespace Ignition
             if (Math.Abs(thrustChange) > 5) thrustChange = Math.Round(thrustChange);
             if (Math.Abs(thrustChange) > 20) thrustChange = Math.Round(thrustChange / 5) * 5;
             MaxThrustCurrent = GetScaledMaxThrustOriginal() + thrustChange;
+            if (MaxThrustCurrent < 0) MaxThrustCurrent = 0;
 
             var ispVacuumMultiplier = PropellantConfigCurrent.IspMultiplier / PropellantConfigOriginal.IspMultiplier;
             ispVacuumMultiplier = Math.Round(ispVacuumMultiplier * 100) / 100;
             var ispVacuumChange = Math.Round(IspVacuumOriginal * (ispVacuumMultiplier - 1));
             if (Math.Abs(ispVacuumChange) > 10) ispVacuumChange = Math.Round(ispVacuumChange / 5) * 5;
             IspVacuumCurrent = IspVacuumOriginal + ispVacuumChange;
+            if (IspVacuumCurrent < 0) IspVacuumCurrent = 0;
 
             if (UseIspSeaLevel())
             {
-                var ispSeaLevelMultiplier = Math.Pow(ispVacuumMultiplier, 1 / thrustMultiplier);
-                if (ispSeaLevelMultiplier < 0) ispSeaLevelMultiplier = 0;
-                ispSeaLevelMultiplier = Math.Round(ispSeaLevelMultiplier * 100) / 100;
-                var ispSeaLevelChange = Math.Round(IspSeaLevelOriginal * (ispSeaLevelMultiplier - 1));
-                if (Math.Abs(ispSeaLevelChange) > 10) ispSeaLevelChange = Math.Round(ispSeaLevelChange / 5) * 5;
-                IspSeaLevelCurrent = IspSeaLevelOriginal + ispSeaLevelChange;
+                var ispSeaLevelVacuumDifference = Math.Round((IspSeaLevelOriginal - IspVacuumOriginal) * ispVacuumMultiplier / thrustMultiplier);
+                if (Math.Abs(ispSeaLevelVacuumDifference) > 10) ispSeaLevelVacuumDifference = Math.Round(ispSeaLevelVacuumDifference / 5) * 5;
+                IspSeaLevelCurrent = IspVacuumCurrent + ispSeaLevelVacuumDifference;
+                if (IspSeaLevelCurrent < 0) IspSeaLevelCurrent = 0;
             }
         }
 
@@ -109,7 +109,7 @@ namespace Ignition
             if (ModuleIsNull()) return;
             if (PropellantConfigCurrent is null) return;
             if (PropellantConfigCurrent.Propellants.Count == 0) return;
-            if (MaxThrustCurrent == -1) return;
+            if (MaxThrustCurrent == 0) return;
 
             ApplyPropellantCombinationToModule();
             SetInfoStrings();
@@ -148,11 +148,11 @@ namespace Ignition
             return allPropellantsCurrent;
         }
 
-        protected string GetValueString(string unit, double vacuumOriginal, double vacuumCurrent, double seaLevelCurrent = -1)
+        protected string GetValueString(string unit, double vacuumOriginal, double vacuumCurrent, double seaLevelCurrent = 0)
         {
             var str = vacuumCurrent.ToString("0.0") + unit;
 
-            if (seaLevelCurrent != -1) str = seaLevelCurrent.ToString("0.0") + unit + " — " + str;
+            if (seaLevelCurrent != 0) str = seaLevelCurrent.ToString("0.0") + unit + " — " + str;
 
             if (vacuumCurrent > vacuumOriginal) str += " (<color=#44FF44>+" + Math.Round(100 * (vacuumCurrent / vacuumOriginal - 1)) + "</color>%)";
             else if (vacuumCurrent < vacuumOriginal) str += " (<color=#FF8888>-" + Math.Round(100 * (1 - vacuumCurrent / vacuumOriginal)) + "</color>%)";
