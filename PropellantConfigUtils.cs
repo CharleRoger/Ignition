@@ -129,7 +129,7 @@ namespace Ignition
         public static string GetPropellantRatiosString(List<Propellant> propellants, List<string> configuredPropellantNames = null)
         {
             if (propellants.Count == 0) return "";
-            if (propellants.Count == 1) return propellants[0].resourceDef.displayName;
+            if (propellants.Count == 1 && !(propellants[0] is null) && !(propellants[0].resourceDef is null)) return propellants[0].resourceDef.displayName;
 
             var totalRatio = 0.0;
             foreach (var propellant in propellants) totalRatio += propellant.ratio;
@@ -169,9 +169,10 @@ namespace Ignition
             for (int i = 0; i < propellants.Count; i++)
             {
                 var propellant = propellants[i];
+                if (propellant is null) continue;
                 var ratio = Math.Truncate(1e4 * multiplier * propellant.ratio / totalRatio) / 1e4;
                 if (multiplier > 1 && configuredPropellantNames.Contains(propellant.name)) ratio = Math.Round(ratio);
-                propellantsString += ratio + " " + propellant.resourceDef.displayName;
+                if (!(propellant.resourceDef is null)) propellantsString += ratio + " " + propellant.resourceDef.displayName;
                 if (i < propellants.Count - 1) propellantsString += " : ";
             }
 
