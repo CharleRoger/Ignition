@@ -40,6 +40,20 @@ namespace Ignition
         {
             if (ModuleIsNull()) return;
 
+            if (!(ModuleRCS.resourceName is null))
+            {
+                int propellantIndex = -1;
+                for (int i = 0; i < ModuleRCS.propellants.Count; i++)
+                {
+                    if (ModuleRCS.propellants[i].name == ModuleRCS.resourceName)
+                    {
+                        propellantIndex = i;
+                        break;
+                    }
+                }
+                if (propellantIndex > -1) ModuleRCS.propellants.RemoveAt(propellantIndex);
+            }
+
             if (ModuleRCS.atmosphereCurve.Curve.keys.Length == 0) return;
             if (MaxThrustOriginal == 0) MaxThrustOriginal = ModuleRCS.thrusterPower;
             if (IspVacuumOriginal == 0) IspVacuumOriginal = GetKeyframeValue(ModuleRCS.atmosphereCurve.Curve.keys, 0);

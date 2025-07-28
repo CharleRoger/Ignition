@@ -1,3 +1,5 @@
+# 1.2.0.1
+- Fixed default propellant nodes (typically MonoPropellant) appearing on `ModuleRCS` controlled by a `ModuleIgnitionRCSController`
 # 1.2.0
 - Added TweakScale compatibility
 - Added configurable `TankDensity` field to `IgnitionPropellantConfig` and `IgnitionPropellantCombinationConfig` nodes. When this field is not supplied, the tank density is computed from the resource densities as before.
