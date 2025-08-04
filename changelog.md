@@ -1,3 +1,5 @@
+# 1.2.1
+- Changed configured `IGNITION_RESOURCE` nodes on `ModuleIgnitionEngineController` to load `OnLoad`, so they can be switched e.g. by a B9 part switch
 # 1.2.0.1
 - Fixed default propellant nodes (typically MonoPropellant) appearing on `ModuleRCS` controlled by a `ModuleIgnitionRCSController`
 # 1.2.0

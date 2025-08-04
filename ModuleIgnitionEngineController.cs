@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommNet.Network;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -58,20 +59,11 @@ namespace Ignition
         {
             base.OnLoad(node);
 
-            if (!(IgnitionResourcesString is null)) return;
+            if (!HighLogic.LoadedSceneIsEditor) return;
 
-            IgnitionResourcesString = "";
-            var ignitionResourceNodes = node.GetNodes("IGNITION_RESOURCE");
-            for (int i = 0; i < ignitionResourceNodes.Length; i++)
-            {
-                if (!ignitionResourceNodes[i].HasValue("name")) continue;
-                if (!ignitionResourceNodes[i].HasValue("Amount") && !ignitionResourceNodes[i].HasValue("ScaledAmount")) continue;
-
-                IgnitionResource newIgnitionResource = new IgnitionResource();
-                newIgnitionResource.Load(ignitionResourceNodes[i]);
-                IgnitionResourcesString += newIgnitionResource.ToString();
-                if (i != ignitionResourceNodes.Length - 1) IgnitionResourcesString += ';';
-            }
+            LoadIgnitionResourcesNodes(node);
+            SetupData();
+            SetInfoStrings();
         }
 
         protected override bool ModuleIsNull()
@@ -89,6 +81,22 @@ namespace Ignition
             if (ModuleIsNull()) return new List<Propellant>();
 
             return ModuleEngines.propellants;
+        }
+
+        private void LoadIgnitionResourcesNodes(ConfigNode node)
+        {
+            IgnitionResourcesString = "";
+            var ignitionResourceNodes = node.GetNodes("IGNITION_RESOURCE");
+            for (int i = 0; i < ignitionResourceNodes.Length; i++)
+            {
+                if (!ignitionResourceNodes[i].HasValue("name")) continue;
+                if (!ignitionResourceNodes[i].HasValue("Amount") && !ignitionResourceNodes[i].HasValue("ScaledAmount")) continue;
+
+                IgnitionResource newIgnitionResource = new IgnitionResource();
+                newIgnitionResource.Load(ignitionResourceNodes[i]);
+                IgnitionResourcesString += newIgnitionResource.ToString();
+                if (i != ignitionResourceNodes.Length - 1) IgnitionResourcesString += ';';
+            }
         }
 
         protected override void SetupOriginalData()
