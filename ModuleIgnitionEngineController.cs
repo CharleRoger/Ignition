@@ -59,9 +59,10 @@ namespace Ignition
         {
             base.OnLoad(node);
 
+            LoadIgnitionResourcesNodes(node);
+
             if (!HighLogic.LoadedSceneIsEditor) return;
 
-            LoadIgnitionResourcesNodes(node);
             SetupData();
             SetInfoStrings();
         }
@@ -115,6 +116,9 @@ namespace Ignition
                 foreach (var requiredResourceString in IgnitionResourcesString.Split(';'))
                 {
                     var ignitionResource = IgnitionResource.FromString(requiredResourceString);
+                    var ignitionResourceDefinition = PartResourceLibrary.Instance.GetDefinition(ignitionResource.ResourceName);
+                    if (ignitionResourceDefinition is null) continue;
+
                     ignitionResource.Amount *= GetScale(EngineThrustScaleExponent);
                     ignitionResource.ScaledAmount *= GetScale(EngineThrustScaleExponent);
                     if (ignitionResource.Amount == 0 && ignitionResource.ScaledAmount > 0)
@@ -122,7 +126,9 @@ namespace Ignition
                         var unroundedAmount = ignitionResource.ScaledAmount * GetEngineMassRate();
                         var powerOfTen = Math.Pow(10, Math.Floor(Math.Log10(unroundedAmount)));
                         ignitionResource.Amount = powerOfTen * Math.Round(unroundedAmount / powerOfTen);
-                        IgnitionResourcesDisplayString += "\n  " + ignitionResource.Amount + " " + ignitionResource.ResourceName;
+
+
+                        IgnitionResourcesDisplayString += "\n  " + ignitionResource.Amount + " " + ignitionResourceDefinition.displayName;
                         if (ignitionResource.AlwaysRequired) IgnitionResourcesDisplayString += " (always consumed)";
                         else IgnitionResourcesDisplayString += " (consumed if necessary)";
                     }
