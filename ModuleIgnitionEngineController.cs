@@ -59,7 +59,7 @@ namespace Ignition
         {
             base.OnLoad(node);
 
-            LoadIgnitionResourcesNodes(node);
+            if (!HighLogic.LoadedSceneIsFlight) LoadIgnitionResourcesNodes(node);
             SetupData();
             SetInfoStrings();
         }
