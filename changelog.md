@@ -1,6 +1,7 @@
 # 1.2.1
-- Changed configured `IGNITION_RESOURCE` nodes on `ModuleIgnitionEngineController` to load `OnLoad`, so they can be switched e.g. by a B9 part switch
+- Changed configured `IGNITION_RESOURCE` nodes on `ModuleIgnitionEngineController` to load in `OnLoad`, so they can be switched e.g. by a B9 part switch
 - Changed `ModuleIgnitionEngineController` to ignore `IGNITION_RESOURCE` nodes with an invalid resource name and display using the resource definition display name in the part action window
+- Fixed `volume` field of `ModuleIgnitionTankController` not applying resources to part correctly in `OnLoad`
 # 1.2.0.1
 - Fixed default propellant nodes (typically MonoPropellant) appearing on `ModuleRCS` controlled by a `ModuleIgnitionRCSController`
 # 1.2.0

@@ -7,6 +7,7 @@ namespace Ignition
     {
         [KSPField(isPersistant = true)]
         public double volume = 0;
+        private double PreviousVolume = 0;
         private double VolumeScaled => GetScale(VolumeScaleExponent) * volume;
         private double VolumeResolution => 1e-5 * VolumeScaled;
 
@@ -61,7 +62,7 @@ namespace Ignition
         {
             var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(resourceName);
 
-            var addedVolume = addNotRemove ? volume : -volume;
+            var addedVolume = addNotRemove ? volume : -PreviousVolume;
             addedVolume *= volumeFraction * GetScale(VolumeScaleExponent);
 
             var addedAmount = addedVolume / PropellantConfigUtils.GetUnitVolume(resourceName);
@@ -71,6 +72,7 @@ namespace Ignition
                 // Set unscaled values because TweakScale will handle them afterwards
                 currentAddedMass += addedVolume * tankDensity / GetScale(MassScaleExponent);
                 currentAddedCost += addedAmount * resourceDefinition.unitCost / GetScale(CostScaleExponent);
+                PreviousVolume = volume;
             }
 
             var totalAmount = addedAmount;
