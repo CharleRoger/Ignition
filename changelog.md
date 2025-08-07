@@ -1,3 +1,5 @@
+# 1.2.1.2
+- Fixed `IGNITION_RESOURCE` nodes not being serialized on a `ModuleIgnitionEngineController` in `OnSave`
 # 1.2.1.1
 - Fixed tank volume doubling when copying part in editor
 # 1.2.1

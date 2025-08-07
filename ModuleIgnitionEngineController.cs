@@ -59,9 +59,36 @@ namespace Ignition
         {
             base.OnLoad(node);
 
-            if (!HighLogic.LoadedSceneIsFlight) LoadIgnitionResourcesNodes(node);
+            if (!HighLogic.LoadedSceneIsFlight)
+            {
+                IgnitionResourcesString = "";
+                var ignitionResourceNodes = node.GetNodes("IGNITION_RESOURCE");
+                for (int i = 0; i < ignitionResourceNodes.Length; i++)
+                {
+                    if (!ignitionResourceNodes[i].HasValue("name")) continue;
+                    if (!ignitionResourceNodes[i].HasValue("Amount") && !ignitionResourceNodes[i].HasValue("ScaledAmount")) continue;
+
+                    IgnitionResource newIgnitionResource = new IgnitionResource();
+                    newIgnitionResource.Load(ignitionResourceNodes[i]);
+                    IgnitionResourcesString += newIgnitionResource.ToString();
+                    if (i != ignitionResourceNodes.Length - 1) IgnitionResourcesString += ';';
+                }
+            }            
+            
             SetupData();
             SetInfoStrings();
+        }
+
+        public override void OnSave(ConfigNode node)
+        {
+            foreach (var ignitionResource in IgnitionResources)
+            {
+                var ignitionResourceNode = new ConfigNode();
+                ignitionResource.Save(ignitionResourceNode);
+                node.AddNode("IGNITION_RESOURCE", ignitionResourceNode);
+            }
+
+            base.OnSave(node);
         }
 
         protected override bool ModuleIsNull()
@@ -79,22 +106,6 @@ namespace Ignition
             if (ModuleIsNull()) return new List<Propellant>();
 
             return ModuleEngines.propellants;
-        }
-
-        private void LoadIgnitionResourcesNodes(ConfigNode node)
-        {
-            IgnitionResourcesString = "";
-            var ignitionResourceNodes = node.GetNodes("IGNITION_RESOURCE");
-            for (int i = 0; i < ignitionResourceNodes.Length; i++)
-            {
-                if (!ignitionResourceNodes[i].HasValue("name")) continue;
-                if (!ignitionResourceNodes[i].HasValue("Amount") && !ignitionResourceNodes[i].HasValue("ScaledAmount")) continue;
-
-                IgnitionResource newIgnitionResource = new IgnitionResource();
-                newIgnitionResource.Load(ignitionResourceNodes[i]);
-                IgnitionResourcesString += newIgnitionResource.ToString();
-                if (i != ignitionResourceNodes.Length - 1) IgnitionResourcesString += ';';
-            }
         }
 
         protected override void SetupOriginalData()
@@ -123,12 +134,12 @@ namespace Ignition
                         var unroundedAmount = ignitionResource.ScaledAmount * GetEngineMassRate();
                         var powerOfTen = Math.Pow(10, Math.Floor(Math.Log10(unroundedAmount)));
                         ignitionResource.Amount = powerOfTen * Math.Round(unroundedAmount / powerOfTen);
-
-
-                        IgnitionResourcesDisplayString += "\n  " + ignitionResource.Amount + " " + ignitionResourceDefinition.displayName;
-                        if (ignitionResource.AlwaysRequired) IgnitionResourcesDisplayString += " (always consumed)";
-                        else IgnitionResourcesDisplayString += " (consumed if necessary)";
                     }
+
+                    IgnitionResourcesDisplayString += "\n  " + ignitionResource.Amount + " " + ignitionResourceDefinition.displayName;
+                    if (ignitionResource.AlwaysRequired) IgnitionResourcesDisplayString += " (always consumed)";
+                    else IgnitionResourcesDisplayString += " (consumed if necessary)";
+                    
                     IgnitionResources.Add(ignitionResource);
                 }
             }
