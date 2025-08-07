@@ -7,6 +7,7 @@ namespace Ignition
     {
         [KSPField(isPersistant = true)]
         public double volume = 0;
+        [KSPField(isPersistant = true)]
         private double PreviousVolume = 0;
         private double VolumeScaled => GetScale(VolumeScaleExponent) * volume;
         private double VolumeResolution => 1e-5 * VolumeScaled;

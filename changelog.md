@@ -1,3 +1,5 @@
+# 1.2.1.1
+- Fixed tank volume doubling when copying part in editor
 # 1.2.1
 - Changed configured `IGNITION_RESOURCE` nodes on `ModuleIgnitionEngineController` to load in `OnLoad`, so they can be switched e.g. by a B9 part switch
 - Changed `ModuleIgnitionEngineController` to ignore `IGNITION_RESOURCE` nodes with an invalid resource name and display using the resource definition display name in the part action window
