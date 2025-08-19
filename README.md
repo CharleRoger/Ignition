@@ -109,7 +109,7 @@ The engine controller can be configured with any number of `IGNITION_RESOURCE`s,
 - `name` = Name of the resource to use.
 - `Amount` = Absolute amount of resource to use.
 - `ScaledAmount` = Approximate amount of resource scaled to the max mass flow rate of the engine, used if `Amount` is not defined.
-- `AddedIgnitionPotential` = Ignition potential added to that computed from the propellant combination, used if the engine is configured with Ignition propellants.
+- `AddedIgnitionPotential` = Ignition potential added to that computed from the propellant combination, used if the engine is configured with Ignition propellants. If not specified, ignition potential due to the interaction of the ignition resource with the other propellants will be computed using propellant configs.
 - `AlwaysRequired` = Whether the ignitor resource is required regardless of the total ignition potential (default is `false`).
 
 In the `Hydrazine`+`LqdOxygen` case above, the following ignitor would provide enough additional ignition potential to bring the total above 1 and achieve ignition.

@@ -101,8 +101,8 @@ namespace Ignition
 
         public void UpdatePropellantConfigs()
         {
-            PropellantConfigOriginal = GetPropellantConfig(GetConnectedPropellantModules(true, true));
-            PropellantConfigCurrent = GetPropellantConfig(GetConnectedPropellantModules(true, false));
+            PropellantConfigOriginal = GetOrCreatePropellantConfig(GetConnectedPropellantModules(true, true));
+            PropellantConfigCurrent = GetOrCreatePropellantConfig(GetConnectedPropellantModules(true, false));
         }
 
         public virtual bool ShouldUpdateAndApply()

@@ -13,7 +13,7 @@ namespace Ignition
         [SerializeField]
         public double ScaledAmount = 0;
         [SerializeField]
-        public double AddedIgnitionPotential = 1;
+        public double AddedIgnitionPotential = 0;
         [SerializeField]
         public bool AlwaysRequired = false;
 

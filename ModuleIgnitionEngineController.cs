@@ -278,7 +278,7 @@ namespace Ignition
             return false;
         }
 
-        private bool UseIgnitionResource(IgnitionResource ignitionResource, ref double addedIgnitionPotential, ref Dictionary<int, double> resourcesToDrain)
+        private bool UseIgnitionResource(IgnitionResource ignitionResource, ref double ignitionPotential, ref Dictionary<string, double> resourcesToDrain)
         {
             double resourceAmount = 0.0;
             int resourceId = PartResourceLibrary.Instance.GetDefinition(ignitionResource.ResourceName).id;
@@ -287,8 +287,35 @@ namespace Ignition
             var requiredResourceAmount = ignitionResource.Amount;
             if (resourceAmount < requiredResourceAmount) return false;
 
-            addedIgnitionPotential += ignitionResource.AddedIgnitionPotential;
-            resourcesToDrain[resourceId] = requiredResourceAmount;
+            resourcesToDrain[ignitionResource.ResourceName] = requiredResourceAmount;
+
+            // Add any ignition potential configured on module
+            if (ignitionResource.AddedIgnitionPotential > 0)
+            {
+                ignitionPotential += ignitionResource.AddedIgnitionPotential;
+            }
+
+            // Otherwise, compute ignition potential due to reaction with main propellants
+            else if (PropellantConfigCurrent is PropellantCombinationConfig propellantCombinationConfig && propellantCombinationConfig.PropellantConfigs.Count == 2)
+            {
+                PropellantConfig fuelConfig = null;
+                PropellantConfig oxidizerConfig = null;
+                var success = PropellantConfigUtils.GetFuelAndOxidizer(propellantCombinationConfig.PropellantConfigs.Values.ToList(), ref fuelConfig, ref oxidizerConfig);
+                if (!success) return false;
+
+                var ignitionResourceConfig = PropellantConfigUtils.GetPropellantConfig(ignitionResource.ResourceName);
+                if (ignitionResourceConfig is null) return false;
+
+                var ignitionPropellantNames = new List<string>() { ignitionResourceConfig.ResourceName };
+                if (ignitionResourceConfig.IsOxidizer) ignitionPropellantNames.Add(fuelConfig.ResourceName);
+                else ignitionPropellantNames.Add(oxidizerConfig.ResourceName);
+
+                PropellantConfigBase ignitorCombinationConfig = PropellantConfigUtils.GetOrCreatePropellantConfig(ignitionPropellantNames);
+
+                // Set the ignition potential, not add, since we are simulating the reaction between the ignitor and one of the propellants, ignoring the other
+                ignitionPotential = ignitorCombinationConfig.IgnitionPotential;
+            }
+
             return true;
         }
 
@@ -307,7 +334,7 @@ namespace Ignition
 
             // Always use any required ignition resources
             var addedIgnitionPotential = 0.0;
-            Dictionary<int, double> resourcesToDrain = new Dictionary<int, double>();
+            var resourcesToDrain = new Dictionary<string, double>();
             var missingResources = new List<string>();
             foreach (var ignitionResource in IgnitionResources)
             {
@@ -316,10 +343,14 @@ namespace Ignition
                 bool success = UseIgnitionResource(ignitionResource, ref addedIgnitionPotential, ref resourcesToDrain);
                 if (!success)
                 {
-                    // Required ignition resource not satisfied
                     ignitionAchieved = false;
-                    missingResources.Add(ignitionResource.ResourceName);
-                    break;
+
+                    // Required ignition resource not satisfied
+                    if (!resourcesToDrain.ContainsKey(ignitionResource.ResourceName))
+                    {
+                        missingResources.Add(ignitionResource.ResourceName);
+                        break;
+                    }
                 }
             }
 
@@ -331,13 +362,8 @@ namespace Ignition
                 var ignitionPotential = 1.0;
                 if (!ignitionAchieved)
                 {
-                    var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
-                    var propellantConfigs = new Dictionary<string, PropellantConfig>();
-                    foreach (var propellantConfigNode in propellantConfigNodes)
-                    {
-                        var propellantConfig = new PropellantConfig(propellantConfigNode);
-                        propellantConfigs[propellantConfig.ResourceName] = propellantConfig;
-                    }
+                    var propellantConfigs = PropellantConfigUtils.GetAllPropellantConfigs();
+
                     var totalRatio = 0.0;
                     foreach (var propellant in ModuleEngines.propellants) totalRatio += propellant.ratio;
                     foreach (var propellant in ModuleEngines.propellants)
@@ -357,12 +383,23 @@ namespace Ignition
                         if (ignitionResource.AlwaysRequired) continue;
 
                         bool success = UseIgnitionResource(ignitionResource, ref ignitionPotential, ref resourcesToDrain);
-                        if (!success) missingResources.Add(ignitionResource.ResourceName);
-
-                        if (ignitionPotential > ignitionThreshold)
+                        if (success)
                         {
-                            ignitionAchieved = true;
-                            break;
+                            if (ignitionPotential > ignitionThreshold)
+                            {
+                                ignitionAchieved = true;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            ignitionAchieved = false;
+
+                            // Optional ignition resource not satisfied
+                            if (!resourcesToDrain.ContainsKey(ignitionResource.ResourceName))
+                            {
+                                missingResources.Add(ignitionResource.ResourceName);
+                            }
                         }
                     }
                 }
@@ -370,15 +407,41 @@ namespace Ignition
 
             if (ignitionAchieved)
             {
-                message = "Ignition!";
-                foreach (var resourceToDrain in resourcesToDrain)
+                message = "Ignition!\n\n";
+                if (resourcesToDrain.Count > 0)
                 {
-                    part?.RequestResource(resourceToDrain.Key, resourceToDrain.Value, ResourceFlowMode.STAGE_PRIORITY_FLOW);
+                    for (int i = 0; i < resourcesToDrain.Count; i++)
+                    {
+                        var resourceName = resourcesToDrain.Keys.ToList()[i];
+                        var amount = resourcesToDrain[resourceName];
+                        part?.RequestResource(resourceName, amount, ResourceFlowMode.STAGE_PRIORITY_FLOW);
+                        message += amount + " " + resourceName;
+                        if (i < resourcesToDrain.Count - 1) message += ", ";
+                    }
+                    message += " used";
                 }
             }
-            else if (FixedIgnitors > 0 && IgnitionResources.Count == 0) message = "Ignition failed — No ignitors remaining";
-            else if (missingResources.Count > 0) message = "Ignition failed — Not enough " + missingResources.First();
-            else message = "Ignition failed — Ignitor was insufficient";
+            else if (FixedIgnitors > 0 && IgnitionResources.Count == 0) message = "Ignition failed\n\nNo ignitors remaining";
+            else if (missingResources.Count > 0) message = "Ignition failed\n\nNot enough " + missingResources.First();
+            else
+            {
+                message = "Ignition failed\n\n";
+                var resourceNames = new List<string>();
+                foreach (var propellant in PropellantConfigCurrent.Propellants) resourceNames.Add(propellant.name);
+                foreach (var ignitionResource in IgnitionResources) resourceNames.Add(ignitionResource.ResourceName);
+                if (resourceNames.Count == 1) message += resourceNames.First() + " is not a monopropellant";
+                else if (resourceNames.Count > 1)
+                {
+                    message += "The combination of ";
+                    for (int i = 0; i < resourceNames.Count; i++)
+                    {
+                        message += resourceNames[i];
+                        if (i == resourceNames.Count - 2) message += " and ";
+                        else if (i < resourceNames.Count - 2) message += ", ";
+                    }
+                    message += " was insufficient";
+                }
+            }
 
             return ignitionAchieved;
         }

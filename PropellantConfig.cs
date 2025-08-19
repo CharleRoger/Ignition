@@ -21,7 +21,7 @@
 
         public Propellant GetPropellant(double ratio, bool drawStackGauge = false, bool ignoreForIsp = false)
         {
-            return PropellantConfigUtils.GetPropellant(ResourceName, ratio, drawStackGauge, ignoreForIsp);
+            return PropellantConfigUtils.CreatePropellant(ResourceName, ratio, drawStackGauge, ignoreForIsp);
         }
     }
 }

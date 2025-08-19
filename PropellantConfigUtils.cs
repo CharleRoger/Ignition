@@ -6,7 +6,7 @@ namespace Ignition
 {
     public static class PropellantConfigUtils
     {
-        public static Propellant GetPropellant(string resourceName, double ratio, bool drawStackGauge = false, bool ignoreForIsp = false)
+        public static Propellant CreatePropellant(string resourceName, double ratio, bool drawStackGauge = false, bool ignoreForIsp = false)
         {
             var node = new ConfigNode();
             node.name = "PROPELLANT";
@@ -20,21 +20,48 @@ namespace Ignition
             return propellant;
         }
 
-        public static PropellantConfigBase GetPropellantConfig(List<ModuleIgnitionPropellantWrapper> propellantModules)
+        public static PropellantConfig GetPropellantConfig(string resourceName)
         {
-            var propellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
-            var propellantConfigs = new Dictionary<string, PropellantConfig>();
-            foreach (var propellantConfigNode in propellantConfigNodes)
+            var allPropellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
+            var allPropellantConfigs = new Dictionary<string, PropellantConfig>();
+            foreach (var propellantConfigNode in allPropellantConfigNodes)
             {
-                var propellantConfig = new PropellantConfig(propellantConfigNode);
-                propellantConfigs[propellantConfig.ResourceName] = propellantConfig;
+                if (propellantConfigNode.HasValue("name") && propellantConfigNode.GetValue("name") == resourceName)
+                {
+                    return new PropellantConfig(propellantConfigNode);
+                }
             }
-            foreach (var propellantModule in propellantModules)
+            return null;
+        }
+
+        public static Dictionary<string, PropellantConfig> GetAllPropellantConfigs()
+        {
+            var allPropellantConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantConfig");
+            var allPropellantConfigs = new Dictionary<string, PropellantConfig>();
+            foreach (var propellantConfigNode in allPropellantConfigNodes)
             {
-                // Dummy config for undefined propellants
-                var propellantName = propellantModule.GetResourceName();
-                if (!propellantConfigs.ContainsKey(propellantName)) propellantConfigs[propellantName] = new PropellantConfig(propellantName);
+                if (propellantConfigNode.HasValue("name"))
+                {
+                    allPropellantConfigs[propellantConfigNode.GetValue("name")] = new PropellantConfig(propellantConfigNode);
+                }
             }
+            return allPropellantConfigs;
+        }
+
+        public static List<PropellantCombinationConfig> GetAllPropellantCombinationConfigs()
+        {
+            var propellantCombinationConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantCombinationConfig");
+            var allPropellantCombinationConfigs = new List<PropellantCombinationConfig>();
+            foreach (var propellantCombinationConfigNode in propellantCombinationConfigNodes)
+            {
+                allPropellantCombinationConfigs.Add(new PropellantCombinationConfig(propellantCombinationConfigNode));
+            }
+            return allPropellantCombinationConfigs;
+        }
+
+        public static PropellantConfigBase GetOrCreatePropellantConfig(List<ModuleIgnitionPropellantWrapper> propellantModules)
+        {
+            if (propellantModules.Count == 0) return null;
 
             // If propellants have specified ratios, construct the combination
             bool ratiosSpecified = true;
@@ -51,21 +78,29 @@ namespace Ignition
                 var propellants = new List<Propellant>();
                 foreach (var propellantModule in propellantModules)
                 {
-                    var propellant = GetPropellant(propellantModule.GetResourceName(), propellantModule.ratio, propellantModule.drawStackGauge, propellantModule.ignoreForIsp);
+                    var propellant = CreatePropellant(propellantModule.GetResourceName(), propellantModule.ratio, propellantModule.drawStackGauge, propellantModule.ignoreForIsp);
                     propellants.Add(propellant);
                 }
                 return new PropellantCombinationConfig(propellants);
             }
 
-            // Need to account for ratio, drawStackGauge and ignoreForIsp here
-
             // If propellants have unspecified ratios, try to find a pre-configured propellant combination
-            ConfigNode[] propellantCombinationConfigNodes = GameDatabase.Instance.GetConfigNodes("IgnitionPropellantCombinationConfig");
             var propellantNames = new List<string>();
-            foreach (var propellantModule in propellantModules) propellantNames.Add(propellantModule.GetResourceName());
-            foreach (var propellantCombinationConfigNode in propellantCombinationConfigNodes)
+            foreach (var propellantModule in propellantModules)
             {
-                var propellantCombinationConfig = new PropellantCombinationConfig(propellantCombinationConfigNode);
+                if (!propellantModule.ignoreForIsp) propellantNames.Add(propellantModule.GetResourceName());
+            }
+            return GetOrCreatePropellantConfig(propellantNames);
+        }
+
+        public static PropellantConfigBase GetOrCreatePropellantConfig(List<string> propellantNames)
+        {
+            if (propellantNames.Count == 0) return null;
+
+            // Try to find a config for the given combination
+            var allPropellantCombinationConfigs = GetAllPropellantCombinationConfigs();
+            foreach (var propellantCombinationConfig in allPropellantCombinationConfigs)
+            {
                 if (propellantCombinationConfig.Propellants.Count != propellantNames.Count) continue;
 
                 var configPropellantNames = new HashSet<string>();
@@ -73,44 +108,48 @@ namespace Ignition
 
                 if (configPropellantNames.SetEquals(propellantNames)) return propellantCombinationConfig;
             }
-
-            // If there is only one propellant, return a simple config
-            if (propellantModules.Count == 1)
+            
+            // Gather individual configs for each propellant
+            var allPropellantConfigs = GetAllPropellantConfigs();
+            var propellantConfigs = new List<PropellantConfig>();
+            foreach (var propellantName in propellantNames)
             {
-                var propellantName = propellantModules.First().GetResourceName();
-                if (!(propellantName is null) && propellantConfigs.ContainsKey(propellantName)) return propellantConfigs[propellantName];
-                return null;
-            }
-
-            // Otherwise generate a new combination, which we can only do with a pair of fuel and oxidizer
-            if (propellantModules.Count != 2) return null;
-            // Both the fuel and oxidizer must be used in engine data computation
-            if (propellantModules[0].ignoreForIsp || propellantModules[1].ignoreForIsp) return null;
-            // If both have ratios set, propellants should have been created directly above
-            // If either one has a ratio set, just ignore it (e.g. the fuel in a jet-rocket multimode engine)
-            if (propellantModules[0].ratio != 0 && propellantModules[1].ratio != 0) return null;
-
-            PropellantConfig fuelConfig = null;
-            PropellantConfig oxidizerConfig = null;
-
-            for (int i = 0; i < 2; i++)
-            {
-                var propellantModuleResourceName = propellantModules[i].GetResourceName();
-                foreach (var propellantConfig in propellantConfigs.Values)
+                foreach (var propellantConfig in allPropellantConfigs.Values)
                 {
                     if (propellantConfig.Propellants.Count != 1) continue; // Should only be single propellants here, but just in case
-
-                    if (propellantConfig.Propellants.First().name == propellantModuleResourceName)
-                    {
-                        if (propellantConfig.IsOxidizer) oxidizerConfig = propellantConfig;
-                        else fuelConfig = propellantConfig;
-                        break;
-                    }
+                    if (propellantConfig.ResourceName == propellantName) propellantConfigs.Add(propellantConfig);
+                    if (propellantConfigs.Count == propellantNames.Count) break;
                 }
             }
-            if (fuelConfig is null || oxidizerConfig is null) return null;
+            if (propellantConfigs.Count < propellantNames.Count) return null;
+            if (propellantConfigs.Count > 2) return null;
 
-            return new PropellantCombinationConfig(fuelConfig, oxidizerConfig);
+            // If there is only one propellant, return a simple config
+            if (propellantNames.Count == 1) return propellantConfigs.First();
+
+            // Otherwise generate a new combination, which we can only do with a pair of fuel and oxidizer
+            PropellantConfig fuelConfig = null;
+            PropellantConfig oxidizerConfig = null;
+            var success = GetFuelAndOxidizer(propellantConfigs, ref fuelConfig, ref oxidizerConfig);
+            if (success) return new PropellantCombinationConfig(fuelConfig, oxidizerConfig);
+
+            return null;
+        }
+
+        public static bool GetFuelAndOxidizer(List<PropellantConfig> propellantConfigs, ref PropellantConfig fuelConfig, ref PropellantConfig oxidizerConfig)
+        {
+            if (propellantConfigs.Count != 2) return false;
+
+            fuelConfig = null;
+            oxidizerConfig = null;
+
+            foreach (var propellantConfig in propellantConfigs)
+            {
+                if (propellantConfig.IsOxidizer) oxidizerConfig = propellantConfig;
+                else fuelConfig = propellantConfig;
+            }
+
+            return !(fuelConfig is null) && !(oxidizerConfig is null);
         }
 
         public static double GetUnitVolume(string resourceName)

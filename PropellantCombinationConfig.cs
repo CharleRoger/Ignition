@@ -127,7 +127,7 @@ namespace Ignition
         }
 
         private Dictionary<string, PropellantConfig> _propellantConfigs = null;
-        private Dictionary<string, PropellantConfig> PropellantConfigs
+        public Dictionary<string, PropellantConfig> PropellantConfigs
         {
             get
             {
