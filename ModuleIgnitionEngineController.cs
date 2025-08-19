@@ -61,6 +61,8 @@ namespace Ignition
 
             if (!HighLogic.LoadedSceneIsFlight)
             {
+                FixedIgnitorsRemaining = FixedIgnitors;
+
                 IgnitionResourcesString = "";
                 var ignitionResourceNodes = node.GetNodes("IGNITION_RESOURCE");
                 for (int i = 0; i < ignitionResourceNodes.Length; i++)

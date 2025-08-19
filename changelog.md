@@ -1,5 +1,6 @@
 # 1.2.2
 - Added ignition potential computation using propellant configs when `AddedIgnitionPotential` is not specified on the `IGNITION_RESOURCE` node.
+- Fixed `FixedIgnitors` value not updating properly on `ModuleIgnitionEngineController` in `OnLoad`
 # 1.2.1.2
 - Fixed `IGNITION_RESOURCE` nodes not being serialized on a `ModuleIgnitionEngineController` in `OnSave`
 # 1.2.1.1
