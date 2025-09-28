@@ -1,4 +1,4 @@
-# 1.2.2.2
+# 1.2.2.1
 - Fixed zero tank density when a `ModuleIgnitionTankController` is configured with only a single `PropellantConfig` with no specified `TankDensity`
 # 1.2.2
 - Added ignition potential computation using propellant configs when `AddedIgnitionPotential` is not specified on the `IGNITION_RESOURCE` node.
