@@ -160,9 +160,12 @@ namespace Ignition
             return 1;
         }
 
-        public static double GetTankDensity(double resourceDensity)
+        public static double ComputeTankDensity(string resourceName)
         {
-            return Math.Round(2500000 * Math.Pow(resourceDensity, 2 / 3.0)) / 200000000;
+            var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            var unitVolume = GetUnitVolume(resourceName);
+            var density = resourceDefinition.density / unitVolume;
+            return Math.Round(2500000 * Math.Pow(density, 2 / 3.0)) / 200000000;
         }
 
         public static string GetPropellantRatiosString(List<Propellant> propellants, List<string> configuredPropellantNames = null)
@@ -209,7 +212,7 @@ namespace Ignition
             {
                 var propellant = propellants[i];
                 if (propellant is null) continue;
-                var ratio = Math.Truncate(1e4 * multiplier * propellant.ratio / totalRatio) / 1e4;
+                var ratio = Math.Round(1e4 * multiplier * propellant.ratio / totalRatio) / 1e4;
                 if (multiplier > 1 && configuredPropellantNames.Contains(propellant.name)) ratio = Math.Round(ratio);
                 if (!(propellant.resourceDef is null)) propellantsString += ratio + " " + propellant.resourceDef.displayName;
                 if (i < propellants.Count - 1) propellantsString += " : ";

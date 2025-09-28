@@ -7,7 +7,7 @@ namespace Ignition
         public virtual double ThrustMultiplier { get; protected set; } = 1;
         public virtual double IspMultiplier { get; protected set; } = 1;
         public virtual double IgnitionPotential { get; protected set; } = 1;
-        public virtual double TankDensity { get; protected set; } = 0;
+        public virtual double TankDensity { get; protected set; } = -1;
         public List<Propellant> Propellants { get; protected set; } = new List<Propellant>();
 
         public PropellantConfigBase()

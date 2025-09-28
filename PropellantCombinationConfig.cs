@@ -105,16 +105,7 @@ namespace Ignition
                     {
                         if (propellant.ignoreForIsp) continue;
 
-                        var tankDensity = PropellantConfigs[propellant.name].TankDensity;
-                        if (tankDensity == 0)
-                        {
-                            var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(propellant.name);
-                            var unitVolume = PropellantConfigUtils.GetUnitVolume(propellant.name);
-                            var density = resourceDefinition.density / unitVolume;
-                            tankDensity = PropellantConfigUtils.GetTankDensity(density);
-                        }
-
-                        _tankDensity += tankDensity * propellant.ratio / TotalPropellantRatio;
+                        _tankDensity += PropellantConfigs[propellant.name].TankDensity * propellant.ratio / TotalPropellantRatio;
                     }
                 }
 

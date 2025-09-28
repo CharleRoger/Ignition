@@ -11,12 +11,14 @@
             if (node.HasValue("name")) ResourceName = node.GetValue("name");
             if (node.HasValue("IsOxidizer")) IsOxidizer = bool.Parse(node.GetValue("IsOxidizer"));
             if (node.HasValue("MixtureConstant")) MixtureConstant = int.Parse(node.GetValue("MixtureConstant"));
+            if (TankDensity == -1) TankDensity = PropellantConfigUtils.ComputeTankDensity(ResourceName);
             Propellants.Add(GetPropellant(1, true));
         }
 
         public PropellantConfig(string resourceName)
         {
             ResourceName = resourceName;
+            if (TankDensity == -1) TankDensity = PropellantConfigUtils.ComputeTankDensity(ResourceName);
         }
 
         public Propellant GetPropellant(double ratio, bool drawStackGauge = false, bool ignoreForIsp = false)
