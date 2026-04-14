@@ -8,8 +8,14 @@ namespace Ignition
     abstract class ModuleIgnitionThrusterController : ModuleIgnitionController
     {
         [KSPField(isPersistant = true)]
+        public bool AutoComputeThrust = true;
+
+        [KSPField(isPersistant = true)]
         public double MaxThrustOriginal = 0;
         protected double MaxThrustCurrent = 0;
+
+        [KSPField(isPersistant = true)]
+        public bool AutoComputeIsp = true;
 
         [KSPField(isPersistant = true)]
         public double IspVacuumOriginal = 0;
@@ -122,27 +128,37 @@ namespace Ignition
             if (PropellantConfigOriginal is null || PropellantConfigCurrent is null) return;
             if (PropellantConfigOriginal.Propellants.Count == 0 || PropellantConfigCurrent.Propellants.Count == 0) return;
 
-            var thrustMultiplier = PropellantConfigCurrent.ThrustMultiplier / PropellantConfigOriginal.ThrustMultiplier;
-            thrustMultiplier = Math.Round(thrustMultiplier * 100) / 100;
-            var thrustChange = Math.Round(GetScaledMaxThrustOriginal() * (thrustMultiplier - 1) / 0.1) * 0.1;
-            if (Math.Abs(thrustChange) > 5) thrustChange = Math.Round(thrustChange);
-            if (Math.Abs(thrustChange) > 20) thrustChange = Math.Round(thrustChange / 5) * 5;
-            MaxThrustCurrent = GetScaledMaxThrustOriginal() + thrustChange;
-            if (MaxThrustCurrent < 0) MaxThrustCurrent = 0;
+            MaxThrustCurrent = GetScaledMaxThrustOriginal();
+            IspVacuumCurrent = IspVacuumOriginal;
+            IspSeaLevelCurrent = IspSeaLevelOriginal;
 
-            var ispVacuumMultiplier = PropellantConfigCurrent.IspMultiplier / PropellantConfigOriginal.IspMultiplier;
-            ispVacuumMultiplier = Math.Round(ispVacuumMultiplier * 100) / 100;
-            var ispVacuumChange = Math.Round(IspVacuumOriginal * (ispVacuumMultiplier - 1));
-            if (Math.Abs(ispVacuumChange) > 10) ispVacuumChange = Math.Round(ispVacuumChange / 5) * 5;
-            IspVacuumCurrent = IspVacuumOriginal + ispVacuumChange;
-            if (IspVacuumCurrent < 0) IspVacuumCurrent = 0;
+            var thrustMultiplier = Math.Round(100 * PropellantConfigCurrent.ThrustMultiplier / PropellantConfigOriginal.ThrustMultiplier) / 100;
 
-            if (UseIspSeaLevel())
+            if (AutoComputeThrust)
             {
-                var ispSeaLevelVacuumDifference = Math.Round((IspSeaLevelOriginal - IspVacuumOriginal) * ispVacuumMultiplier / thrustMultiplier);
-                if (Math.Abs(ispSeaLevelVacuumDifference) > 10) ispSeaLevelVacuumDifference = Math.Round(ispSeaLevelVacuumDifference / 5) * 5;
-                IspSeaLevelCurrent = IspVacuumCurrent + ispSeaLevelVacuumDifference;
-                if (IspSeaLevelCurrent < 0) IspSeaLevelCurrent = 0;
+                var maxThrustChange = Math.Round(MaxThrustCurrent * (thrustMultiplier - 1) / 0.1) * 0.1;
+                if (Math.Abs(maxThrustChange) > 5) maxThrustChange = Math.Round(maxThrustChange);
+                if (Math.Abs(maxThrustChange) > 20) maxThrustChange = Math.Round(maxThrustChange / 5) * 5;
+                MaxThrustCurrent += maxThrustChange;
+                if (MaxThrustCurrent < 0) MaxThrustCurrent = 0;
+            }
+
+            if (AutoComputeIsp)
+            {
+                var ispVacuumMultiplier = PropellantConfigCurrent.IspMultiplier / PropellantConfigOriginal.IspMultiplier;
+                ispVacuumMultiplier = Math.Round(ispVacuumMultiplier * 100) / 100;
+                var ispVacuumChange = Math.Round(IspVacuumOriginal * (ispVacuumMultiplier - 1));
+                if (Math.Abs(ispVacuumChange) > 10) ispVacuumChange = Math.Round(ispVacuumChange / 5) * 5;
+                IspVacuumCurrent += ispVacuumChange;
+                if (IspVacuumCurrent < 0) IspVacuumCurrent = 0;
+
+                if (UseIspSeaLevel())
+                {
+                    var ispSeaLevelVacuumChange = Math.Round((IspSeaLevelOriginal - IspVacuumOriginal) * ispVacuumMultiplier / thrustMultiplier);
+                    if (Math.Abs(ispSeaLevelVacuumChange) > 10) ispSeaLevelVacuumChange = Math.Round(ispSeaLevelVacuumChange / 5) * 5;
+                    IspSeaLevelCurrent += ispSeaLevelVacuumChange;
+                    if (IspSeaLevelCurrent < 0) IspSeaLevelCurrent = 0;
+                }
             }
         }
 
