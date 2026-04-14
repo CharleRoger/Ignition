@@ -4,6 +4,13 @@ using static Ignition.PropellantConfigUtils;
 
 namespace Ignition
 {
+    struct ApplyPropellantConfigOptions
+    {
+        public bool RecomputeMaxThrust;
+        public bool RecomputeIspVacuum;
+        public bool RecomputeIspSeaLevel;
+    }
+
     abstract class ModuleIgnitionController : PartModule
     {
         [KSPField(isPersistant = true)]
@@ -26,7 +33,7 @@ namespace Ignition
         protected const string RCSThrustScaleExponent = "rcs";
 
         public virtual void UnapplyPropellantConfig() {}
-        public abstract void ApplyPropellantConfig();
+        public abstract void ApplyPropellantConfig(ApplyPropellantConfigOptions options);
         public virtual void SetupData() { }
         protected abstract void SetInfoStrings();
 
@@ -110,7 +117,7 @@ namespace Ignition
             return true;
         }
 
-        public void UpdateAndApply(bool initialSetup)
+        public void UpdateAndApply(bool initialSetup, ApplyPropellantConfigOptions? options = null)
         {
             if (!ShouldUpdateAndApply()) return;
 
@@ -118,7 +125,9 @@ namespace Ignition
             UnapplyPropellantConfig();
             UpdatePropellantConfigs();
             if (initialSetup) SetupData();
-            ApplyPropellantConfig();
+            if (options is null) ApplyPropellantConfig(new ApplyPropellantConfigOptions() { RecomputeMaxThrust = false, RecomputeIspVacuum = false, RecomputeIspSeaLevel = false });
+            else ApplyPropellantConfig((ApplyPropellantConfigOptions)options);
+
             SetInfoStrings();
         }
 
