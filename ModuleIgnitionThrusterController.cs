@@ -8,8 +8,14 @@ namespace Ignition
     abstract class ModuleIgnitionThrusterController : ModuleIgnitionController
     {
         [KSPField(isPersistant = true)]
+        public bool AutoComputeThrust = true;
+
+        [KSPField(isPersistant = true)]
         public double MaxThrustOriginal = 0;
         protected double MaxThrustCurrent = 0;
+
+        [KSPField(isPersistant = true)]
+        public bool AutoComputeIsp = true;
 
         [KSPField(isPersistant = true)]
         public double IspVacuumOriginal = 0;
@@ -117,7 +123,7 @@ namespace Ignition
             return 0;
         }
 
-        private void ComputeNewStats(ApplyPropellantConfigOptions options)
+        private void ComputeNewStats()
         {
             if (PropellantConfigOriginal is null || PropellantConfigCurrent is null) return;
             if (PropellantConfigOriginal.Propellants.Count == 0 || PropellantConfigCurrent.Propellants.Count == 0) return;
@@ -127,9 +133,8 @@ namespace Ignition
             IspSeaLevelCurrent = IspSeaLevelOriginal;
 
             var thrustMultiplier = Math.Round(100 * PropellantConfigCurrent.ThrustMultiplier / PropellantConfigOriginal.ThrustMultiplier) / 100;
-            var ispVacuumMultiplier = PropellantConfigCurrent.IspMultiplier / PropellantConfigOriginal.IspMultiplier;
 
-            if (options.RecomputeMaxThrust)
+            if (AutoComputeThrust)
             {
                 var maxThrustChange = Math.Round(MaxThrustCurrent * (thrustMultiplier - 1) / 0.1) * 0.1;
                 if (Math.Abs(maxThrustChange) > 5) maxThrustChange = Math.Round(maxThrustChange);
@@ -138,27 +143,28 @@ namespace Ignition
                 if (MaxThrustCurrent < 0) MaxThrustCurrent = 0;
             }
 
-            if (options.RecomputeIspVacuum)
+            if (AutoComputeIsp)
             {
+                var ispVacuumMultiplier = PropellantConfigCurrent.IspMultiplier / PropellantConfigOriginal.IspMultiplier;
                 ispVacuumMultiplier = Math.Round(ispVacuumMultiplier * 100) / 100;
                 var ispVacuumChange = Math.Round(IspVacuumOriginal * (ispVacuumMultiplier - 1));
                 if (Math.Abs(ispVacuumChange) > 10) ispVacuumChange = Math.Round(ispVacuumChange / 5) * 5;
                 IspVacuumCurrent += ispVacuumChange;
                 if (IspVacuumCurrent < 0) IspVacuumCurrent = 0;
-            }
 
-            if (options.RecomputeIspSeaLevel && UseIspSeaLevel())
-            {
-                var ispSeaLevelVacuumChange = Math.Round((IspSeaLevelOriginal - IspVacuumOriginal) * ispVacuumMultiplier / thrustMultiplier);
-                if (Math.Abs(ispSeaLevelVacuumChange) > 10) ispSeaLevelVacuumChange = Math.Round(ispSeaLevelVacuumChange / 5) * 5;
-                IspSeaLevelCurrent += ispSeaLevelVacuumChange;
-                if (IspSeaLevelCurrent < 0) IspSeaLevelCurrent = 0;
+                if (UseIspSeaLevel())
+                {
+                    var ispSeaLevelVacuumChange = Math.Round((IspSeaLevelOriginal - IspVacuumOriginal) * ispVacuumMultiplier / thrustMultiplier);
+                    if (Math.Abs(ispSeaLevelVacuumChange) > 10) ispSeaLevelVacuumChange = Math.Round(ispSeaLevelVacuumChange / 5) * 5;
+                    IspSeaLevelCurrent += ispSeaLevelVacuumChange;
+                    if (IspSeaLevelCurrent < 0) IspSeaLevelCurrent = 0;
+                }
             }
         }
 
-        public override void ApplyPropellantConfig(ApplyPropellantConfigOptions options)
+        public override void ApplyPropellantConfig()
         {
-            ComputeNewStats(options);
+            ComputeNewStats();
 
             if (ModuleIsNull()) return;
             if (PropellantConfigCurrent is null) return;

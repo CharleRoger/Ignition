@@ -20,15 +20,6 @@
         [KSPField(isPersistant = true)]
         public bool ignoreForIsp = false;
 
-        [KSPField(isPersistant = true)]
-        public bool AutoComputeMaxThrust = true;
-
-        [KSPField(isPersistant = true)]
-        public bool AutoComputeIspVacuum = true;
-
-        [KSPField(isPersistant = true)]
-        public bool AutoComputeIspSeaLevel = true;
-
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
@@ -37,16 +28,9 @@
 
             if (resourceNameOriginal is null) resourceNameOriginal = resourceName;
 
-            var options = new ApplyPropellantConfigOptions
-            {
-                RecomputeMaxThrust = AutoComputeMaxThrust,
-                RecomputeIspVacuum = AutoComputeIspVacuum,
-                RecomputeIspSeaLevel = AutoComputeIspSeaLevel
-            };
-
             foreach (var controllerModule in part.FindModulesImplementing<ModuleIgnitionController>())
             {
-                if (controllerModule.IsConnectedToPropellantModule(moduleID)) controllerModule.UpdateAndApply(false, options);
+                if (controllerModule.IsConnectedToPropellantModule(moduleID)) controllerModule.UpdateAndApply(false);
             }
 
             if (HighLogic.LoadedSceneIsEditor)

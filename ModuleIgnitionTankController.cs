@@ -109,7 +109,7 @@ namespace Ignition
             AddOrRemoveConfiguredPropellant(false);
         }
 
-        public override void ApplyPropellantConfig(ApplyPropellantConfigOptions options)
+        public override void ApplyPropellantConfig()
         {
             AddOrRemoveConfiguredPropellant(true);
             RemoveZeroResources();

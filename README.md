@@ -113,6 +113,11 @@ Controller modules handle propellant combinations and are used to modify engine 
 - `propellantModuleID` = Unique id of a `ModuleIgnitionPropellant` used by this controller module (see below). Any number of `propellantModuleID` fields is allowed.
 - `ScaleExponent`: Exponent used to compute volume/thrust scaling for TweakScale. Default values are set to the TweakScale defaults, 3 for tank volume and 2.5 for engine and RCS thrust.
 
+Engines and RCS use controller modules derived from a base class with the following fields which are accessible and modifiable on the derived classes:
+
+- `AutoComputeThrust` = Whether or not to automatically compute the thrust when the propellants are changed.
+- `AutoComputeIsp` = Whether or not to automatically compute the vacuum and sea-level Isp when the propellants are changed.
+
 #### ModuleIgnitionEngineController
 
 Controls propellant combinations and ignition simulation for a `ModuleEngines` with the following fields:
@@ -182,9 +187,6 @@ Controls propellant combinations and ignition simulation of a `ModuleEngines` wi
 - `ratio`: Fixed ratio to override auto-computed mixture ratios. Ratio should be specified on either all the propellants or none of them. Useful for e.g. jet engines with a switchable fuel but a fixed fuel:IntakeAir ratio.
 - `drawStackGauge`: Whether this propellant should be used for the volume gauge on the staging panel.
 - `ignoreForIsp`: Whether this propellant should be ignored in thrust and isp computations, e.g. for the IntakeAir above.
-- `AutoComputeThrust` = Whether or not to automatically compute the thrust of connected engines and RCS when the module is reloaded.
-- `AutoComputeIspVacuum` = Whether or not to automatically compute the vacuum Isp of connected engines and RCS when the module is reloaded.
-- `AutoComputeIspSeaLevel` = Whether or not to automatically compute the sea-level Isp of connected engines and RCS when the module is reloaded.
 
 A propellant module can be used by any number of controller modules. For example, with the propellant configs defined above, the following modules added to the LFB KR-1x2 "Twin-Boar" would convert the engine to run on 3 Kerosene : 5 LqdOxygen and change the in-built tanks to contain a total volume of 32,000 litres of propellant split into 12,000 Kerosene and 20,000 LqdOxygen:
 ```

@@ -1,5 +1,5 @@
 # 1.2.3
-- Added `AutoComputeMaxThrust`, `AutoComputeIspVacuum` and `AutoComputeIspSeaLevel` boolean flags to `ModuleIgnitionPropellant` so that this feature can be disabled and overrided on a per-propellant basis
+- Added `AutoComputeThrust` and `AutoComputeIsp` boolean flags to `ModuleIgnitionEngineController` and `ModuleIgnitionRCSController` so that this feature can be disabled and overrided
 # 1.2.2.1
 - Fixed zero tank density when a `ModuleIgnitionTankController` is configured with only a single `PropellantConfig` with no specified `TankDensity`
 # 1.2.2
