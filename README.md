@@ -1,8 +1,11 @@
 # Ignition!
+
 Ignition is a plugin for Kerbal Space Program which provides a simple framework for maintaining consistent propellant mixtures across fuel tanks, engines and RCS thrusters, as well as providing a basic simulation of the performance of propellant combinations and the use of resources for ignition. This plugin was developed specifically for the mod [Chemical Propulsion](https://github.com/CharleRoger/ChemicalPropulsion), but is designed in a generic way and may find uses elsewhere.
 
 ## Features
+
 ### Supported
+
 - Configurable engine ignitors which can require a resource
 - Automated computation of bipropellant ignition potential, mixture ratio, thrust multiplier and Isp multiplier
 - User-definable override propellant mixtures
@@ -10,12 +13,17 @@ Ignition is a plugin for Kerbal Space Program which provides a simple framework 
 - Bipropellant fuel tanks, engines and RCS thrusters
 - Jet engines
 - Compatible with B9PartSwitch and TweakScale
+
 ### Planned
+
 - Tripropellants and more
 
 ## Usage
+
 ### IgnitionPropellantConfig
+
 Any resource used as a propellant by Ignition requires a `IgnitionPropellantConfig` defined in any .cfg file anywhere in your GameData directory, which takes the following fields:
+
 - `name`: Name of the resource to use.
 - `IsOxidizer`: Whether this resource acts as the oxidizer in a fuel-oxidizer bipropellant. `false` (fuel) by default.
 - `MixtureConstant`: A dimensionless quantity used to determine mixture ratios of bipropellants.
@@ -56,6 +64,7 @@ IgnitionPropellantConfig
 Any engine set up using `Hydrazine` and `NTO` or `Hydrazine` and `LqdOxygen` will identify the presence of both a fuel and an oxidizer and create a bipropellant engine. If both `NTO` and `LqdOxygen` are present, only the first propellant will be used, since the use of multiple propellants of the same kind in a single engine is not currently supported.
 
 All final computed parameters for the engine will be rounded to sensible levels of precision. Bipropellant mixture ratios in particular are computed by rounding the ratio of the two `MixtureConstant`s to the nearest multiple of 0.0625 or 0.1, whichever is closer. In this case, `Hydrazine`+`NTO` have a 5:6 ratio which is rounded to 7:9 = 0.4375:0.5625, while `Hydrazine`+`LqdOxygen` yields 5:5 = 1:1. The thrust multiplier, isp multiplier and ignition potential in the NTO case are calculated as follows:
+
 - Thrust: 1.05^0.4375 * 1.05^0.5625 = 1.05
 - Isp: 1.12^0.4375 * 0.92^0.5625 = ~1.003
 - Ignition potential: 1.2^0.4375 * 1.2^0.5625 = 1.2
@@ -67,7 +76,9 @@ And in the LqdOxygen case:
 The thrust and isp multipliers are applied to the base stats of the engine, while the ignition potential is used to determine whether the engine ignites. `Hydrazine`+`NTO` yield an ignition potential of 1.2, which is greater than 1, so this combination ignites hypergolically. `Hydrazine`+`LqdOxygen` only reaches ~0.849, so cannot ignite alone and require additional ignition potential from a `ModuleIgnitor` (see below).
 
 ### IgnitionPropellantCombinationConfig
+
 The automatic computation of propellant combinations described above can be overridden by defining a `IgnitionPropellantCombinationConfig` with the following fields:
+
 - Any number of `PROPELLANT` nodes, though currently only monopropellants and bipropellants are supported.
 - `ThrustMultiplier`: Total vacuum thrust multiplier.
 - `IspMultiplier`: Total Isp thrust multiplier.
@@ -95,17 +106,27 @@ IgnitionPropellantCombinationConfig
 ```
 
 ### Controller modules
-Controller modules are used to modify engine modules, RCS modules, and resources on a part. Each type of controller module can be configured with the following fields:
+
+Controller modules handle propellant combinations and are used to modify engine modules, RCS modules, and resources on a part. Each type of controller module can be configured with the following fields:
+
 - `moduleID` = Unique id of this module.
 - `propellantModuleID` = Unique id of a `ModuleIgnitionPropellant` used by this controller module (see below). Any number of `propellantModuleID` fields is allowed.
 - `ScaleExponent`: Exponent used to compute volume/thrust scaling for TweakScale. Default values are set to the TweakScale defaults, 3 for tank volume and 2.5 for engine and RCS thrust.
 
+Engines and RCS use controller modules derived from a base class with the following fields which are accessible and modifiable on the derived classes:
+
+- `AutoComputeThrust` = Whether or not to automatically compute the thrust when the propellants are changed.
+- `AutoComputeIsp` = Whether or not to automatically compute the vacuum and sea-level Isp when the propellants are changed.
+
 #### ModuleIgnitionEngineController
+
 Controls propellant combinations and ignition simulation for a `ModuleEngines` with the following fields:
+
 - `engineID` = Unique id of the targeted engine module. Must be specified for a part with multiple engine modules, can be omitted otherwise.
 - `FixedIgnitors` = Count of single-use ignitors which cannot be replaced.
 
 The engine controller can be configured with any number of `IGNITION_RESOURCE`s, with the following fields:
+
 - `name` = Name of the resource to use.
 - `Amount` = Absolute amount of resource to use.
 - `ScaledAmount` = Approximate amount of resource scaled to the max mass flow rate of the engine, used if `Amount` is not defined.
@@ -141,20 +162,26 @@ MODULE
 ```
 
 #### ModuleIgnitionRCSController
+
 Controls propellant combinations for a `ModuleRCS` with the following fields:
+
 - `moduleID` = Unique id of this module.
 
 RCS controllers cannot be configured with an ignitor resource.
 
 #### ModuleIgnitionTankController
+
 Controls propellant combinations and ignition simulation of a `ModuleEngines` with the following fields:
+
 - `moduleID` = Unique id of this module.
 - `volume` = Total volume for propellant storage in litres **NOT** stock KSP units of five-litres.
 - `addedMass` = Mass added to the part, not counting any resources.
 - `addedCost` = Cost added to the part, not counting any resources.
 
 ### ModuleIgnitionPropellant
+
 `ModuleIgnitionPropellant` is used to inject propellants into a controller module and take advantage of all of Ignition's automatic performance computation. It has the following fields:
+
 - `moduleID`: Optional arbitrary string identifier.
 - `resourceName`: Name of the resource to use, used to look up the corresponding `IgnitionPropellantConfig` or `IgnitionPropellantCombinationConfig` where applicable.
 - `ratio`: Fixed ratio to override auto-computed mixture ratios. Ratio should be specified on either all the propellants or none of them. Useful for e.g. jet engines with a switchable fuel but a fixed fuel:IntakeAir ratio.
@@ -231,17 +258,22 @@ MODULE
 ```
 
 ## Dependencies
+
 - [ModuleManager (4.2.3)](https://github.com/sarbian/ModuleManager)
 
 ## Compatibility
+
 Ignition modules are designed to be compatible with modules from the following plugins:
+
 - [B9PartSwitch (2.21.0.1)](https://github.com/KSPModStewards/B9PartSwitch)
 - [TweakScaleRescaled (3.2.4)](https://github.com/JonnyOThan/TweakScale)
 
 ## License
+
 Distributed under the GNU General Public License.
 
 ## Special thanks
+
 This is the first plugin I've made for Kerbal Space Program, which was possible with help from several people in the KSP Modding Society Discord server, including but not limited to Greatspace2019KSP, Halbann, HB Stratos, JohnnyOThan, and *especially* JadeOfMaar.
 
 The engine ignitor logic was loosely based on the mod EngineIgnitor, so thanks also to HoneyFox, Riocrokite, DennyTX and linuxgurugamer for their work on that plugin!
