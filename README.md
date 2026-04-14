@@ -115,8 +115,9 @@ Controller modules handle propellant combinations and are used to modify engine 
 
 Engines and RCS use controller modules derived from a base class with the following fields which are accessible and modifiable on the derived classes:
 
-- `AutoComputeThrust` = Whether or not to automatically compute the thrust when the propellants are changed.
-- `AutoComputeIsp` = Whether or not to automatically compute the vacuum and sea-level Isp when the propellants are changed.
+- `AutoComputeMaxThrust` = Whether or not to automatically recompute the thrust when the module is reloaded.
+- `AutoComputeIspVacuum` = Whether or not to automatically recompute the vacuum Isp when the module is reloaded.
+- `AutoComputeIspSeaLevel` = Whether or not to automatically recompute the sea-level Isp when the module is reloaded.
 
 #### ModuleIgnitionEngineController
 

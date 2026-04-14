@@ -8,18 +8,21 @@ namespace Ignition
     abstract class ModuleIgnitionThrusterController : ModuleIgnitionController
     {
         [KSPField(isPersistant = true)]
-        public bool AutoComputeThrust = true;
+        public bool AutoComputeMaxThrust = true;
 
         [KSPField(isPersistant = true)]
         public double MaxThrustOriginal = 0;
         protected double MaxThrustCurrent = 0;
 
         [KSPField(isPersistant = true)]
-        public bool AutoComputeIsp = true;
+        public bool AutoComputeIspVacuum = true;
 
         [KSPField(isPersistant = true)]
         public double IspVacuumOriginal = 0;
         protected double IspVacuumCurrent = 0;
+
+        [KSPField(isPersistant = true)]
+        public bool AutoComputeIspSeaLevel = true;
 
         [KSPField(isPersistant = true)]
         public double IspSeaLevelOriginal = 0;
@@ -133,8 +136,9 @@ namespace Ignition
             IspSeaLevelCurrent = IspSeaLevelOriginal;
 
             var thrustMultiplier = Math.Round(100 * PropellantConfigCurrent.ThrustMultiplier / PropellantConfigOriginal.ThrustMultiplier) / 100;
+            var ispVacuumMultiplier = Math.Round(100 * PropellantConfigCurrent.IspMultiplier / PropellantConfigOriginal.IspMultiplier) / 100;
 
-            if (AutoComputeThrust)
+            if (AutoComputeMaxThrust)
             {
                 var maxThrustChange = Math.Round(MaxThrustCurrent * (thrustMultiplier - 1) / 0.1) * 0.1;
                 if (Math.Abs(maxThrustChange) > 5) maxThrustChange = Math.Round(maxThrustChange);
@@ -143,22 +147,21 @@ namespace Ignition
                 if (MaxThrustCurrent < 0) MaxThrustCurrent = 0;
             }
 
-            if (AutoComputeIsp)
+            if (AutoComputeIspVacuum)
             {
-                var ispVacuumMultiplier = PropellantConfigCurrent.IspMultiplier / PropellantConfigOriginal.IspMultiplier;
-                ispVacuumMultiplier = Math.Round(ispVacuumMultiplier * 100) / 100;
                 var ispVacuumChange = Math.Round(IspVacuumOriginal * (ispVacuumMultiplier - 1));
                 if (Math.Abs(ispVacuumChange) > 10) ispVacuumChange = Math.Round(ispVacuumChange / 5) * 5;
                 IspVacuumCurrent += ispVacuumChange;
                 if (IspVacuumCurrent < 0) IspVacuumCurrent = 0;
 
-                if (UseIspSeaLevel())
-                {
-                    var ispSeaLevelVacuumChange = Math.Round((IspSeaLevelOriginal - IspVacuumOriginal) * ispVacuumMultiplier / thrustMultiplier);
-                    if (Math.Abs(ispSeaLevelVacuumChange) > 10) ispSeaLevelVacuumChange = Math.Round(ispSeaLevelVacuumChange / 5) * 5;
-                    IspSeaLevelCurrent += ispSeaLevelVacuumChange;
-                    if (IspSeaLevelCurrent < 0) IspSeaLevelCurrent = 0;
-                }
+            }
+
+            if (AutoComputeIspSeaLevel && UseIspSeaLevel())
+            {
+                var ispSeaLevelVacuumChange = Math.Round((IspSeaLevelOriginal - IspVacuumOriginal) * ispVacuumMultiplier / thrustMultiplier);
+                if (Math.Abs(ispSeaLevelVacuumChange) > 10) ispSeaLevelVacuumChange = Math.Round(ispSeaLevelVacuumChange / 5) * 5;
+                IspSeaLevelCurrent += ispSeaLevelVacuumChange;
+                if (IspSeaLevelCurrent < 0) IspSeaLevelCurrent = 0;
             }
         }
 
