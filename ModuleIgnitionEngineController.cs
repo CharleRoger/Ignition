@@ -407,6 +407,14 @@ namespace Ignition
                 }
             }
 
+            var resourceDisplayNames = new Dictionary<string, string>();
+            foreach (var propellant in PropellantConfigCurrent.Propellants) resourceDisplayNames[propellant.resourceDef.name] = propellant.resourceDef.displayName;
+            foreach (var ignitionResource in IgnitionResources)
+            {
+                var ignitionResourceDefinition = PartResourceLibrary.Instance.GetDefinition(ignitionResource.ResourceName);
+                resourceDisplayNames[ignitionResource.ResourceName] = ignitionResourceDefinition.displayName;
+            }
+            
             if (ignitionAchieved)
             {
                 message = "Ignition!\n\n";
@@ -417,7 +425,7 @@ namespace Ignition
                         var resourceName = resourcesToDrain.Keys.ToList()[i];
                         var amount = resourcesToDrain[resourceName];
                         part?.RequestResource(resourceName, amount, ResourceFlowMode.STAGE_PRIORITY_FLOW);
-                        message += amount + " " + resourceName;
+                        message += amount + " " + resourceDisplayNames[resourceName];
                         if (i < resourcesToDrain.Count - 1) message += ", ";
                     }
                     message += " used";
@@ -428,18 +436,17 @@ namespace Ignition
             else
             {
                 message = "Ignition failed\n\n";
-                var resourceNames = new List<string>();
-                foreach (var propellant in PropellantConfigCurrent.Propellants) resourceNames.Add(propellant.name);
-                foreach (var ignitionResource in IgnitionResources) resourceNames.Add(ignitionResource.ResourceName);
-                if (resourceNames.Count == 1) message += resourceNames.First() + " is not a monopropellant";
-                else if (resourceNames.Count > 1)
+                if (resourceDisplayNames.Count == 1) message += resourceDisplayNames.Values.First() + " is not a monopropellant";
+                else if (resourceDisplayNames.Count > 1)
                 {
                     message += "The combination of ";
-                    for (int i = 0; i < resourceNames.Count; i++)
+                    int i = 0;
+                    foreach (var resourceDisplayName in resourceDisplayNames)
                     {
-                        message += resourceNames[i];
-                        if (i == resourceNames.Count - 2) message += " and ";
-                        else if (i < resourceNames.Count - 2) message += ", ";
+                        message += resourceDisplayName.Value;
+                        if (i == resourceDisplayNames.Count - 2) message += " and ";
+                        else if (i < resourceDisplayNames.Count - 2) message += ", ";
+                        i++;
                     }
                     message += " was insufficient";
                 }
