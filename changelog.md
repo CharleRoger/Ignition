@@ -1,3 +1,5 @@
+# 1.2.3.1
+- Fixed sea-level isp computation
 # 1.2.3
 - Added `AutoComputeThrust` and `AutoComputeIsp` boolean flags to `ModuleIgnitionEngineController` and `ModuleIgnitionRCSController` so that this feature can be disabled and overridden
 - Changed ignition status messages to use resource display names

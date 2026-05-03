@@ -158,9 +158,9 @@ namespace Ignition
 
             if (AutoComputeIspSeaLevel && UseIspSeaLevel())
             {
-                var ispSeaLevelVacuumChange = Math.Round((IspSeaLevelOriginal - IspVacuumOriginal) * ispVacuumMultiplier / thrustMultiplier);
-                if (Math.Abs(ispSeaLevelVacuumChange) > 10) ispSeaLevelVacuumChange = Math.Round(ispSeaLevelVacuumChange / 5) * 5;
-                IspSeaLevelCurrent += ispSeaLevelVacuumChange;
+                var ispDifference = Math.Round((IspSeaLevelOriginal - IspVacuumOriginal) * (ispVacuumMultiplier / thrustMultiplier));
+                if (Math.Abs(ispDifference) > 10) ispDifference = Math.Round(ispDifference / 5) * 5;
+                IspSeaLevelCurrent = IspVacuumCurrent + ispDifference;
                 if (IspSeaLevelCurrent < 0) IspSeaLevelCurrent = 0;
             }
         }
