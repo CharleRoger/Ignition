@@ -1,3 +1,6 @@
+# 1.2.3.2
+- Fixed CKAN TweakScale conflict
+- Fixed ignition resources requiring NaN amount for engines with zero isp (contributed by @Aerograch)
 # 1.2.3.1
 - Fixed sea-level isp computation
 # 1.2.3
