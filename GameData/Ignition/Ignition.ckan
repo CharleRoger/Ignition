@@ -13,7 +13,7 @@ supports:
   - name: B9PartSwitch
   - name: TweakScaleRescaled
 conflicts:
-  - name: TweakScale
+  - name: TweakScale-L
   - name: TweakScaleCompanion
   - name: TweakScaleCompanion-ReStockPlus
 install:
