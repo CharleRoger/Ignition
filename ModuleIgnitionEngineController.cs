@@ -212,7 +212,8 @@ namespace Ignition
             if (ModuleIsNull()) return 0;
 
             double isp = ModuleEngines.atmosphereCurve.Curve.keys[0].value;
-            if (!ModuleEngines.useVelCurve && ModuleEngines.atmosphereCurve.Curve.keys.Length > 1 && ModuleEngines.atmosphereCurve.Curve.keys[1].value != 0) isp = ModuleEngines.atmosphereCurve.Curve.keys[1].value;
+            if (!ModuleEngines.useVelCurve && ModuleEngines.atmosphereCurve.Curve.keys.Length > 1 && ModuleEngines.atmosphereCurve.Curve.keys[1].value > 0) isp = ModuleEngines.atmosphereCurve.Curve.keys[1].value;
+            if (isp <= 0) return 0; // Really shouldn't be zero here, but just in case
             return 1000 * ModuleEngines.maxThrust / (ModuleEngines.g * isp);
         }
 
